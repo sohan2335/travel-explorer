@@ -1,0 +1,242 @@
+[
+  {
+    "id": "itc-kohenur",
+    "city_id": "hyderabad",
+    "kind": "hotel",
+    "name": "ITC Kohenur",
+    "area": "Madhapur",
+    "description": "A luxury stay to compare with your budget and route.",
+    "source_url": "https://www.itchotels.com/in/en/itckohenur-hyderabad",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "paradise",
+    "city_id": "hyderabad",
+    "kind": "restaurant",
+    "name": "Paradise, Secunderabad",
+    "area": "Secunderabad",
+    "description": "A restaurant option; check the exact branch, menu and current service.",
+    "source_url": "https://www.paradisefoodcourt.in/restaurants-in-hyderabad.html",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "sahas",
+    "city_id": "hyderabad",
+    "kind": "adventure",
+    "name": "Sahas Adventure Park",
+    "area": "Ramoji Film City",
+    "description": "Plan this as a separate outing; confirm activities, entry and transfer time.",
+    "source_url": "https://www.adventure.ramojifilmcity.com/",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "wonderla",
+    "city_id": "hyderabad",
+    "kind": "waterpark",
+    "name": "Wonderla Hyderabad",
+    "area": "Hyderabad outskirts",
+    "description": "Land and water rides; check current tickets and ride requirements.",
+    "source_url": "https://www.wonderla.com/hyderabad",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "inorbit",
+    "city_id": "hyderabad",
+    "kind": "mall",
+    "name": "Inorbit Mall Cyberabad",
+    "area": "Cyberabad",
+    "description": "Shopping and dining to explore around the western side of the city.",
+    "source_url": "https://www.inorbit.in/inorbit-mall-cyberabad",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "taj-aguada",
+    "city_id": "goa",
+    "kind": "hotel",
+    "name": "Taj Fort Aguada Resort & Spa",
+    "area": "Sinquerim, North Goa",
+    "description": "A resort option in North Goa; compare the journey if staying in the south.",
+    "source_url": "https://www.tajhotels.com/en-in/hotels/taj-fort-aguada-goa",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "wharf-panjim",
+    "city_id": "goa",
+    "kind": "restaurant",
+    "name": "The Fisherman’s Wharf, Panjim",
+    "area": "Campal, Panjim",
+    "description": "A dining option in Panjim; check current menus and table availability.",
+    "source_url": "https://www.thefishermanswharf.in/panjim-goa",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "generator-paris",
+    "city_id": "paris",
+    "kind": "hotel",
+    "name": "Generator Paris",
+    "area": "Paris",
+    "description": "A hostel option to compare for your travel dates; dorms and rooms vary.",
+    "source_url": "https://staygenerator.com/hostels/paris",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "chartier",
+    "city_id": "paris",
+    "kind": "restaurant",
+    "name": "Bouillon Chartier",
+    "area": "Paris",
+    "description": "Choose the branch and check current menus before planning a meal.",
+    "source_url": "https://www.bouillon-chartier.com/",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "forum-halles",
+    "city_id": "paris",
+    "kind": "mall",
+    "name": "Westfield Forum des Halles",
+    "area": "Les Halles, Paris",
+    "description": "A central shopping and dining option to explore.",
+    "source_url": "https://www.westfield.com/fr/france/forumdeshalles",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "generator-rome",
+    "city_id": "rome",
+    "kind": "hotel",
+    "name": "Generator Rome",
+    "area": "Rome",
+    "description": "A hostel option to compare with your dates and chosen sightseeing route.",
+    "source_url": "https://staygenerator.com/hostels/rome",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "mercato-roma",
+    "city_id": "rome",
+    "kind": "restaurant",
+    "name": "Mercato Centrale Roma",
+    "area": "Via Giolitti, Rome",
+    "description": "A food market with several dining choices; check individual vendors.",
+    "source_url": "https://www.mercatocentrale.com/rome/",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "mughal",
+    "city_id": "agra",
+    "kind": "hotel",
+    "name": "ITC Mughal",
+    "area": "Agra",
+    "description": "A resort stay to compare with your route and budget.",
+    "source_url": "https://www.itchotels.com/in/en/itcmughal-agra",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "peshawri-agra",
+    "city_id": "agra",
+    "kind": "restaurant",
+    "name": "Peshawri at ITC Mughal",
+    "area": "ITC Mughal, Agra",
+    "description": "A hotel dining option; check the current menu and reservation arrangements.",
+    "source_url": "https://www.itchotels.com/in/en/itcmughal-agra",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "rajputana",
+    "city_id": "jaipur",
+    "kind": "hotel",
+    "name": "ITC Rajputana",
+    "area": "Jaipur",
+    "description": "A hotel option to compare for your dates and budget.",
+    "source_url": "https://www.itchotels.com/in/en/itcrajputana-jaipur",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "peshawri-jaipur",
+    "city_id": "jaipur",
+    "kind": "restaurant",
+    "name": "Peshawri at ITC Rajputana",
+    "area": "ITC Rajputana, Jaipur",
+    "description": "A dining option inside the hotel; check current service and reservations.",
+    "source_url": "https://www.itchotels.com/in/en/itcrajputana-jaipur",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "hindustan",
+    "city_id": "varkala",
+    "kind": "hotel",
+    "name": "Hindustan Beach Retreat",
+    "area": "Papanasam Beach, Varkala",
+    "description": "A beach-area stay to compare for your travel dates.",
+    "source_url": "https://www.hindustanbeachretreat.com/",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "hindustan-dining",
+    "city_id": "varkala",
+    "kind": "restaurant",
+    "name": "Rooftop dining at Hindustan Beach Retreat",
+    "area": "Papanasam Beach, Varkala",
+    "description": "The property lists a rooftop restaurant. Confirm visitor access and meal service.",
+    "source_url": "https://www.hindustanbeachretreat.com/",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "tea-county",
+    "city_id": "munnar",
+    "kind": "hotel",
+    "name": "KTDC Tea County",
+    "area": "Munnar",
+    "description": "A hill-resort option; check rooms, dates and your onward route.",
+    "source_url": "https://www.ktdc.com/tea_county",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "tea-county-dining",
+    "city_id": "munnar",
+    "kind": "restaurant",
+    "name": "Multi Cuisine Restaurant at Tea County",
+    "area": "KTDC Tea County, Munnar",
+    "description": "A dining option listed by KTDC; confirm current service and visitor access.",
+    "source_url": "https://www.ktdc.com/tea_county/facilities",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "kunzam",
+    "city_id": "manali",
+    "kind": "hotel",
+    "name": "HPTDC Hotel Kunzam",
+    "area": "Manali",
+    "description": "A town-centre hotel option listed by Himachal tourism.",
+    "source_url": "https://hptdc.hp.gov.in/hotel-detail/62",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "kunzam-dining",
+    "city_id": "manali",
+    "kind": "restaurant",
+    "name": "Restaurant at Hotel Kunzam",
+    "area": "HPTDC Hotel Kunzam, Manali",
+    "description": "The official listing includes a restaurant and open-air cafe. Confirm current service.",
+    "source_url": "https://hptdc.hp.gov.in/hotel-detail/62",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "ganga-kinare",
+    "city_id": "rishikesh",
+    "kind": "hotel",
+    "name": "GANGA KINARE",
+    "area": "Rishikesh",
+    "description": "A riverside resort option; compare dates, budget and transport.",
+    "source_url": "https://www.gangakinare.com/",
+    "checked_on": "2026-10-18"
+  },
+  {
+    "id": "jal-jalebi",
+    "city_id": "rishikesh",
+    "kind": "restaurant",
+    "name": "Jal & Jalebi",
+    "area": "GANGA KINARE, Rishikesh",
+    "description": "The resort lists this in-house restaurant. Confirm current menus and visitor access.",
+    "source_url": "https://www.gangakinare.com/",
+    "checked_on": "2026-10-18"
+  }
+]
