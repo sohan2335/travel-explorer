@@ -60,6 +60,9 @@ class _CityDiscoverScreenState extends State<CityDiscoverScreen> {
         'adventure' => 'adventure parks',
         'waterpark' => 'water parks',
         'event' => 'events',
+        'movie' => 'cinemas',
+        'play' => 'gaming and sports venues',
+        'salon' => 'salons',
         _ => 'shopping malls',
       };
   @override
@@ -118,7 +121,7 @@ class _CityDiscoverScreenState extends State<CityDiscoverScreen> {
                                                 TextStyle(color: Colors.white)),
                                       ])),
                             ]))),
-                    TextButton.icon(
+                    FilledButton.tonalIcon(
                         onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -245,7 +248,7 @@ class _CityDiscoverScreenState extends State<CityDiscoverScreen> {
                         label: Text('Plan my day in ${_city.name}')),
                     const SizedBox(height: 12),
                     const Text(
-                        'Keep your first plan to one main outing. A park visit can take most of a day; avoid squeezing far-apart places into short transfer buffers.'),
+                        'Add up to five outings in the day planner. Allow realistic travel buffers; a park visit can take most of a day.'),
                   ]),
             ))),
       );

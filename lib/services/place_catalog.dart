@@ -16,9 +16,19 @@ class PlaceCatalog {
   static const dataUrl =
       'https://ep-gentle-wildflower-a1i7b8z3.apirest.ap-southeast-1.aws.neon.tech/travel_explorer/rest/v1';
   static Future<CatalogResult>? _cached;
-  static Future<CatalogResult> load({bool refresh = false}) {
-    if (refresh) _cached = null;
-    return _cached ??= _load();
+  static CatalogResult? _loaded;
+  static Future<CatalogResult> load(
+      {bool refresh = false, bool offline = false}) {
+    if (refresh) {
+      _cached = null;
+      _loaded = null;
+    }
+    if (offline)
+      return _cached = rootBundle
+          .loadString('assets/data/places.json')
+          .then((text) => _loaded = CatalogResult(_decode(text), false));
+    if (_loaded != null) return Future.value(_loaded);
+    return _cached ??= _load().then((result) => _loaded = result);
   }
 
   static List<LocalPlace> _decode(String text) {

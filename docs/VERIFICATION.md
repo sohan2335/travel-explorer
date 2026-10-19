@@ -72,3 +72,17 @@ Before submission verify on an actual browser/device:
 
 - A new Munnar draft with a prefilled restaurant and 240-minute visit was generated, saved, restored after a full browser reload, and reopened from Wishlist. The meal transfer and timetable were rebuilt correctly. Only that temporary test draft was removed; the pre-existing Hyderabad draft was preserved.
 - Screenshots of the final phone UI are `discovery-home.jpg`, `city-discovery.jpg` and `city-plan.jpg` under `docs/screenshots/`.
+
+
+## Latest regression check — 19 October 2026
+- All 19 Flutter tests passed after allowing the runner normal loopback access.
+- Core Dart checks include multi-outing timing, route origins, old draft compatibility and invalid schedules.
+- Browser: fresh Google callback completed and displayed the account; verifier removed from the URL.
+- Browser: selected two extra Goa outings and generated all three visits with travel legs. Sample route was not saved.
+- Home activity tiles and floating Home / Hotlists / Search navigation implemented. Profile remains in the top-right icon.
+
+Code analysis completed with no errors or warnings; it reported 52 informational style suggestions (mostly adding braces around short if statements and console output in the standalone checker). These are not a clean analyzer pass and remain to be tidied. Release web build and all 19 Flutter tests passed.
+
+Search-only-tab and animated icon update: all 20 Flutter tests passed, including the new check that city search appears only in Search and does not filter Home. Phone layout at enlarged text passed.
+
+City-guide polish: all 20 tests pass after the redesigned guide, persistent planning and place-information controls, and shared contrast/button sizing changes. Phone tests include enlarged text. Remaining product proposals are documented separately from implemented features in CITY_FIRST_AND_LOGIN.md.

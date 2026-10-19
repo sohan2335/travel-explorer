@@ -29,6 +29,8 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
   @override
   void initState() {
     super.initState();
+    if (Uri.base.queryParameters.containsKey('neon_auth_session_verifier'))
+      _tab = 4;
     _search = TextEditingController(text: widget.controller.query);
   }
 
@@ -54,8 +56,11 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
       listenable: controller,
       builder: (context, _) {
         final saved = _tab == 3;
-        final items =
-            saved ? controller.wishlist : controller.visibleDestinations;
+        final items = saved
+            ? controller.wishlist
+            : _tab == 0
+                ? destinations
+                : controller.visibleDestinations;
         return Scaffold(
           appBar: AppBar(
             flexibleSpace: const DecoratedBox(
@@ -67,8 +72,10 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
             title: const Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.explore_outlined, size: 24),
               SizedBox(width: 10),
-              Text('Travel Explorer',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
+              Flexible(
+                  child: Text('Travel Explorer',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontWeight: FontWeight.w600))),
             ]),
             actions: [
               IconButton(
@@ -171,74 +178,57 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                       ],
                                       if (!saved) ...[
                                         const SizedBox(height: 24),
-                                        TextField(
-                                          controller: _search,
-                                          focusNode: _searchFocus,
-                                          onChanged: controller.setQuery,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Find your city',
-                                            hintText: 'Try Goa or Jaipur',
-                                            prefixIcon: Icon(Icons.search),
+                                        if (_tab == 1) ...[
+                                          TextField(
+                                            controller: _search,
+                                            focusNode: _searchFocus,
+                                            onChanged: controller.setQuery,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Find your city',
+                                              hintText: 'Try Goa or Jaipur',
+                                              prefixIcon: Icon(Icons.search),
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        DropdownButtonFormField<String>(
-                                          initialValue:
-                                              controller.selectedCountry ??
-                                                  'All countries',
-                                          isExpanded: true,
-                                          decoration: const InputDecoration(
-                                              labelText: 'Country'),
-                                          items: [
-                                            'All countries',
-                                            ...controller.countries
-                                          ]
-                                              .map((country) =>
-                                                  DropdownMenuItem(
-                                                      value: country,
-                                                      child: Text(country)))
-                                              .toList(),
-                                          onChanged: (value) =>
-                                              controller.setCountry(
-                                                  value == 'All countries'
-                                                      ? null
-                                                      : value),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text('What would you like to do?',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium),
-                                        const SizedBox(height: 10),
-                                        Wrap(
-                                            spacing: 8,
-                                            runSpacing: 8,
-                                            children: [
-                                              for (final entry in const {
-                                                'restaurant': 'Dining',
-                                                'mall': 'Shopping',
-                                                'event': 'Events',
-                                                'hotel': 'Stays',
-                                                'adventure': 'Adventure parks',
-                                                'waterpark': 'Water parks'
-                                              }.entries)
-                                                ChoiceChip(
-                                                    avatar: Icon(
-                                                        discoveryIcons[
-                                                            entry.key],
-                                                        size: 19,
-                                                        color: discoveryColors[
-                                                            entry.key]),
-                                                    label: Text(entry.value),
-                                                    selected:
-                                                        _activity == entry.key,
-                                                    onSelected: (_) => setState(
-                                                        () => _activity =
-                                                            entry.key)),
-                                            ]),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                            'Now choose a city to explore ${discoveryLabels[_activity]!.toLowerCase()}.'),
+                                          const SizedBox(height: 16),
+                                          DropdownButtonFormField<String>(
+                                            initialValue:
+                                                controller.selectedCountry ??
+                                                    'All countries',
+                                            isExpanded: true,
+                                            decoration: const InputDecoration(
+                                                labelText: 'Country'),
+                                            items: [
+                                              'All countries',
+                                              ...controller.countries
+                                            ]
+                                                .map((country) =>
+                                                    DropdownMenuItem(
+                                                        value: country,
+                                                        child: Text(country)))
+                                                .toList(),
+                                            onChanged: (value) =>
+                                                controller.setCountry(
+                                                    value == 'All countries'
+                                                        ? null
+                                                        : value),
+                                          ),
+                                          const SizedBox(height: 16),
+                                        ],
+                                        if (_tab == 0) ...[
+                                          Text('What would you like to do?',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium),
+                                          const SizedBox(height: 10),
+                                          DiscoveryShortcuts(
+                                              selected: _activity,
+                                              includePlan: false,
+                                              onSelected: (kind) => setState(
+                                                  () => _activity = kind)),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                              'Now choose a city to explore ${discoveryLabels[_activity]!.toLowerCase()}.'),
+                                        ],
                                       ],
                                       const SizedBox(height: 20),
                                       Text(
@@ -343,37 +333,48 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                         ),
                       ),
                     ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _tab,
-            onDestinationSelected: (index) {
-              setState(() => _tab = index);
-              if (index == 1)
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) _searchFocus.requestFocus();
-                });
-              else
-                _searchFocus.unfocus();
-            },
-            destinations: const [
-              NavigationDestination(
-                  icon: Icon(Icons.explore_outlined),
-                  selectedIcon: Icon(Icons.explore),
-                  label: 'Explore'),
-              NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
-              NavigationDestination(
-                  icon: Icon(Icons.route_outlined),
-                  selectedIcon: Icon(Icons.route),
-                  label: 'My trips'),
-              NavigationDestination(
-                  icon: Icon(Icons.favorite_border),
-                  selectedIcon: Icon(Icons.favorite),
-                  label: 'Wishlist'),
-              NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
-                  label: 'Profile'),
-            ],
-          ),
+          bottomNavigationBar: SafeArea(
+              top: false,
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+                  child: Center(
+                      heightFactor: 1,
+                      child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: ClipRRect(
+                              borderRadius: BorderRadius.circular(42),
+                              child: NavigationBar(
+                                height: 76,
+                                backgroundColor: const Color(0xFF242426),
+                                indicatorColor: const Color(0xFF414144),
+                                selectedIndex: _tab == 1
+                                    ? 2
+                                    : _tab == 3 || _tab == 2
+                                        ? 1
+                                        : 0,
+                                onDestinationSelected: (index) {
+                                  setState(() => _tab = [0, 3, 1][index]);
+                                  if (index == 2)
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      if (mounted) _searchFocus.requestFocus();
+                                    });
+                                  else
+                                    _searchFocus.unfocus();
+                                },
+                                destinations: const [
+                                  NavigationDestination(
+                                      icon: Icon(Icons.home_outlined),
+                                      selectedIcon: Icon(Icons.home),
+                                      label: 'Home'),
+                                  NavigationDestination(
+                                      icon: Icon(Icons.bookmark_outline),
+                                      selectedIcon: Icon(Icons.bookmark),
+                                      label: 'Hotlists'),
+                                  NavigationDestination(
+                                      icon: Icon(Icons.search), label: 'Search')
+                                ],
+                              )))))),
         );
       },
     );
@@ -525,193 +526,265 @@ class DestinationDetails extends StatelessWidget {
       {super.key, required this.destination, required this.controller});
   final Destination destination;
   final TravelController controller;
-
+  void _plan(BuildContext context, {String? attraction}) => Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) => DayPlannerScreen(
+              destination: destination,
+              controller: controller,
+              initialAttraction: attraction)));
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) => Scaffold(
-        appBar: AppBar(title: Text(destination.name), actions: [
-          _SaveButton(destination: destination, controller: controller),
-          const SizedBox(width: 8),
-        ]),
-        body: SingleChildScrollView(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: SizedBox(
-                            height: 300,
-                            child: DestinationImage(
-                                url: destination.imageUrl,
-                                label: destination.name)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(destination.category,
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  alignment: Alignment.centerLeft),
-                              onPressed: () =>
-                                  showPlaceInformation(context, destination),
-                              child: Text('${destination.name}  ↗',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          decoration:
-                                              TextDecoration.underline)),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(destination.location),
-                            const SizedBox(height: 24),
-                            Text(destination.description,
-                                style: Theme.of(context).textTheme.bodyLarge),
-                            const SizedBox(height: 16),
-                            OutlinedButton.icon(
-                                icon: const Icon(Icons.explore_outlined),
-                                label: const Text(
-                                    'Find stays, food & things to do'),
-                                onPressed: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => CityDiscoverScreen(
-                                            destination: destination,
-                                            controller: controller)))),
-                            const SizedBox(height: 12),
-                            FilledButton.icon(
-                              icon: const Icon(Icons.calendar_today_outlined),
-                              label: const Text('Plan one day here'),
-                              onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                      builder: (_) => DayPlannerScreen(
-                                          controller: controller,
-                                          destination: destination))),
-                            ),
-                            const SizedBox(height: 24),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE7ECDD),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
+        listenable: controller,
+        builder: (context, _) => Scaffold(
+              appBar: AppBar(
+                  title: Text('${destination.name} city guide',
+                      overflow: TextOverflow.ellipsis),
+                  actions: [
+                    _SaveButton(
+                        destination: destination, controller: controller)
+                  ]),
+              bottomNavigationBar: SafeArea(
+                  top: false,
+                  child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                      child: Center(
+                          heightFactor: 1,
+                          child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 960),
+                              child: SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton.icon(
+                                      onPressed: () => _plan(context),
+                                      icon: const Icon(Icons.route),
+                                      label:
+                                          const Text('Plan one day here'))))))),
+              body: SingleChildScrollView(
+                  child: Center(
+                      child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1000),
+                          child: Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                              child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.wb_sunny_outlined,
-                                        color: Color(0xFFC3AEFF)),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                        child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Best time to visit',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium),
-                                        const SizedBox(height: 6),
-                                        Text(destination.bestTimeToVisit),
-                                      ],
-                                    )),
-                                  ]),
-                            ),
-                            const SizedBox(height: 24),
-                            Text('Top attractions',
-                                style: Theme.of(context).textTheme.titleLarge),
-                            const SizedBox(height: 12),
-                            LayoutBuilder(builder: (context, constraints) {
-                              final width = constraints.maxWidth >= 650
-                                  ? (constraints.maxWidth - 32) / 3
-                                  : constraints.maxWidth;
-                              return Wrap(
-                                  spacing: 16,
-                                  runSpacing: 16,
-                                  children: [
-                                    for (final attraction
-                                        in destination.attractions)
-                                      SizedBox(
-                                          width: width,
-                                          child: Card(
-                                            clipBehavior: Clip.antiAlias,
-                                            child: Column(
+                                    ClipRRect(
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: SizedBox(
+                                            height: 240,
+                                            child: Stack(
+                                                fit: StackFit.expand,
+                                                children: [
+                                                  DestinationImage(
+                                                      url: destination.imageUrl,
+                                                      label: destination.name),
+                                                  const DecoratedBox(
+                                                      decoration: BoxDecoration(
+                                                          gradient: LinearGradient(
+                                                              begin: Alignment
+                                                                  .topCenter,
+                                                              end: Alignment
+                                                                  .bottomCenter,
+                                                              colors: [
+                                                        Colors.transparent,
+                                                        Color(0xEE08090B)
+                                                      ]))),
+                                                  Positioned(
+                                                      left: 20,
+                                                      right: 20,
+                                                      bottom: 20,
+                                                      child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                                destination
+                                                                    .name,
+                                                                style: const TextStyle(
+                                                                    fontSize:
+                                                                        32,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: Colors
+                                                                        .white)),
+                                                            Text(
+                                                                destination
+                                                                    .location,
+                                                                style: const TextStyle(
+                                                                    color: Colors
+                                                                        .white))
+                                                          ])),
+                                                ]))),
+                                    const SizedBox(height: 20),
+                                    Text('Get to know ${destination.name}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge),
+                                    const SizedBox(height: 8),
+                                    Text(destination.description,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(height: 1.6)),
+                                    const SizedBox(height: 16),
+                                    Wrap(
+                                        spacing: 10,
+                                        runSpacing: 10,
+                                        children: [
+                                          OutlinedButton.icon(
+                                              onPressed: () =>
+                                                  showPlaceInformation(
+                                                      context, destination),
+                                              icon: const Icon(
+                                                  Icons.info_outline),
+                                              label: const Text(
+                                                  'About this city')),
+                                          OutlinedButton.icon(
+                                              onPressed: () => Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          CityDiscoverScreen(
+                                                              destination:
+                                                                  destination,
+                                                              controller:
+                                                                  controller))),
+                                              icon: const Icon(
+                                                  Icons.explore_outlined),
+                                              label: const Text(
+                                                  'Browse city venues')),
+                                        ]),
+                                    const SizedBox(height: 20),
+                                    Card(
+                                        child: Padding(
+                                            padding: const EdgeInsets.all(20),
+                                            child: Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  SizedBox(
-                                                      height: 150,
-                                                      child: DestinationImage(
-                                                          url: attraction
-                                                              .imageUrl,
-                                                          label:
-                                                              attraction.name)),
-                                                  Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              16),
-                                                      child: TextButton(
-                                                        style: TextButton.styleFrom(
-                                                            padding:
-                                                                EdgeInsets.zero,
-                                                            alignment: Alignment
-                                                                .centerLeft),
-                                                        onPressed: () =>
-                                                            showPlaceInformation(
-                                                                context,
-                                                                destination,
-                                                                attraction:
-                                                                    attraction),
-                                                        child: Text(
-                                                            '${attraction.name}  ↗',
+                                                  Icon(Icons.wb_sunny_outlined,
+                                                      color: colors.secondary,
+                                                      size: 30),
+                                                  const SizedBox(width: 16),
+                                                  Expanded(
+                                                      child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                        Text(
+                                                            'Best time to visit',
                                                             style: Theme.of(
                                                                     context)
                                                                 .textTheme
                                                                 .titleMedium
                                                                 ?.copyWith(
-                                                                    color: Theme.of(
-                                                                            context)
-                                                                        .colorScheme
-                                                                        .primary,
-                                                                    decoration:
-                                                                        TextDecoration
-                                                                            .underline)),
-                                                      )),
-                                                ]),
-                                          )),
-                                  ]);
-                            }),
-                            const SizedBox(height: 28),
-                            const Divider(),
-                            const SizedBox(height: 20),
-                            TravelTools(destination: destination),
-                          ]),
-                    ),
-                  ]),
-            ),
-          ),
-        ),
-      ),
-    );
+                                                                    color: colors
+                                                                        .onSurface)),
+                                                        const SizedBox(
+                                                            height: 6),
+                                                        Text(
+                                                            destination
+                                                                .bestTimeToVisit,
+                                                            style: TextStyle(
+                                                                color: colors
+                                                                    .onSurface,
+                                                                fontSize: 16))
+                                                      ]))
+                                                ]))),
+                                    const SizedBox(height: 24),
+                                    Text('Top attractions',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge),
+                                    const SizedBox(height: 6),
+                                    const Text(
+                                        'Open a place guide or use a sight as the first stop in your day.'),
+                                    const SizedBox(height: 16),
+                                    LayoutBuilder(
+                                        builder: (context, constraints) {
+                                      final width = constraints.maxWidth >= 700
+                                          ? (constraints.maxWidth - 32) / 3
+                                          : constraints.maxWidth;
+                                      return Wrap(
+                                          spacing: 16,
+                                          runSpacing: 16,
+                                          children: [
+                                            for (final attraction
+                                                in destination.attractions)
+                                              SizedBox(
+                                                  width: width,
+                                                  child: Card(
+                                                      clipBehavior:
+                                                          Clip.antiAlias,
+                                                      child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            InkWell(
+                                                                onTap: () => showPlaceInformation(
+                                                                    context,
+                                                                    destination,
+                                                                    attraction:
+                                                                        attraction),
+                                                                child: SizedBox(
+                                                                    height: 180,
+                                                                    child: DestinationImage(
+                                                                        url: attraction
+                                                                            .imageUrl,
+                                                                        label: attraction
+                                                                            .name))),
+                                                            Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .all(
+                                                                        16),
+                                                                child: Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Text(
+                                                                          attraction
+                                                                              .name,
+                                                                          style: Theme.of(context)
+                                                                              .textTheme
+                                                                              .titleMedium
+                                                                              ?.copyWith(fontWeight: FontWeight.bold)),
+                                                                      const SizedBox(
+                                                                          height:
+                                                                              12),
+                                                                      Wrap(
+                                                                          spacing:
+                                                                              8,
+                                                                          runSpacing:
+                                                                              8,
+                                                                          children: [
+                                                                            OutlinedButton.icon(
+                                                                                onPressed: () => showPlaceInformation(context, destination, attraction: attraction),
+                                                                                icon: const Icon(Icons.menu_book_outlined, size: 18),
+                                                                                label: const Text('View guide')),
+                                                                            FilledButton.tonalIcon(
+                                                                                onPressed: () => _plan(context, attraction: attraction.name),
+                                                                                icon: const Icon(Icons.add_location_alt_outlined, size: 18),
+                                                                                label: const Text('Plan a visit')),
+                                                                          ]),
+                                                                    ])),
+                                                          ])))
+                                          ]);
+                                    }),
+                                    const SizedBox(height: 28),
+                                    const Divider(),
+                                    const SizedBox(height: 20),
+                                    TravelTools(destination: destination),
+                                  ]))))),
+            ));
   }
 }
 

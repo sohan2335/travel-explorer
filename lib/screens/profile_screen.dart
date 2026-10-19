@@ -28,10 +28,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final result = await authRequest('get-session');
       if (mounted)
         setState(() => _user = result?['user'] as Map<String, dynamic>?);
-    } catch (_) {
+    } catch (error) {
       if (mounted)
         setState(() => _message =
-            'Could not check your session. You can retry or continue exploring.');
+            'Your sign-in session could not be completed. Please try Continue with Google again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -130,7 +130,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       await authRequest('sign-in/social', {
                                     'provider': 'google',
                                     'callbackURL': Uri.base
-                                        .replace(fragment: '')
+                                        .replace(
+                                            fragment: '',
+                                            queryParameters: Map<String,
+                                                    String>.from(
+                                                Uri.base.queryParameters)
+                                              ..remove(
+                                                  'neon_auth_session_verifier'))
                                         .toString(),
                                     'disableRedirect': true
                                   });

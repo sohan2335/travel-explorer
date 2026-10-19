@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travel_explorer/services/place_catalog.dart';
 import 'package:travel_explorer/services/local_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travel_explorer/main.dart';
@@ -14,6 +15,7 @@ Finder saveButton(String tooltip) => find.byWidgetPredicate(
 Future<void> showApp(WidgetTester tester) async {
   await tester.binding.setSurfaceSize(const Size(1000, 1400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.runAsync(() => PlaceCatalog.load(offline: true));
   await tester.pumpWidget(TravelExplorerApp(store: MemoryStore()));
   await tester.pumpAndSettle();
 }
@@ -28,9 +30,9 @@ void main() {
     await tester.ensureVisible(find.text('Sights & city guide'));
     await tester.tap(find.text('Sights & city guide'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Goa  ↗'));
+    await tester.ensureVisible(find.text('About this city'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Goa  ↗'));
+    await tester.tap(find.text('About this city'));
     await tester.pumpAndSettle();
     expect(find.text('View surroundings'), findsOneWidget);
     await tester.tap(find.byTooltip('Close place information'));
@@ -87,7 +89,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Close city'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Wishlist'));
+    await tester.tap(find.text('Hotlists'));
     await tester.pump();
     expect(find.text('1 saved places'), findsOneWidget);
     expect(find.text('Goa'), findsOneWidget);
@@ -99,11 +101,28 @@ void main() {
     expect(find.text('Goa'), findsNothing);
   });
 
+  testWidgets('city search lives only in Search and does not filter Home',
+      (tester) async {
+    await showApp(tester);
+    expect(find.widgetWithText(TextField, 'Find your city'), findsNothing);
+    await tester.tap(find.text('Search'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Find your city'), 'Paris');
+    await tester.pumpAndSettle();
+    expect(find.text('1 cities to explore'), findsOneWidget);
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(TextField, 'Find your city'), findsNothing);
+    expect(find.text('10 cities to explore'), findsOneWidget);
+  });
+
   testWidgets('activity selection opens that category for a city',
       (tester) async {
     await showApp(tester);
     expect(find.widgetWithText(ChoiceChip, 'Beaches'), findsNothing);
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Shopping'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Shopping'));
+    await tester.pump();
     await tester.ensureVisible(find.text('Goa').first);
     await tester.tap(find.text('Goa').first);
     await tester.pumpAndSettle();
@@ -117,13 +136,15 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     tester.platformDispatcher.textScaleFactorTestValue = 1.5;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.runAsync(() => PlaceCatalog.load(offline: true));
     await tester.pumpWidget(TravelExplorerApp(store: MemoryStore()));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Goa'));
+    await tester.scrollUntilVisible(find.text('Goa'), 250,
+        scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Goa').first);
     await tester.tap(find.text('Goa').first);
@@ -141,7 +162,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Close city'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Wishlist'));
+    await tester.tap(find.text('Hotlists'));
     await tester.pump();
     expect(find.text('Your wishlist is waiting'), findsOneWidget);
     expect(tester.takeException(), isNull);

@@ -230,6 +230,76 @@ void main() {
       'The catalog includes India, France, and Italy.');
   check(destinations.every((place) => place.attractions.length >= 2),
       'Every destination needs two or more attractions.');
+  final multiple = buildDayPlan(
+      arrivalMinutes: 8 * 60,
+      origin: 'Station',
+      hotel: 'Hotel',
+      attraction: 'Museum',
+      restMinutes: 0,
+      travelMinutes: 15,
+      additionalPlaces: ['Mall', 'Park'],
+      mealPlace: 'Cafe',
+      visitMinutesOverride: 30);
+  check(multiple.where((s) => s.title.startsWith('Explore ')).length == 3,
+      'Every selected outing must appear.');
+  check(
+      multiple.firstWhere((s) => s.title == 'Travel to Mall').origin ==
+          'Museum',
+      'Second outing starts at the first.');
+  check(
+      multiple.firstWhere((s) => s.title == 'Travel to Park').origin == 'Mall',
+      'Third outing starts at the second.');
+  check(
+      multiple
+              .firstWhere((s) => s.title == 'Travel to your meal stop')
+              .origin ==
+          'Park',
+      'Meal transfer follows the last outing.');
+  check(multiple.last.startMinutes + multiple.last.durationMinutes == 780,
+      'Extra visits and transfers must count in the end time.');
+  for (var i = 1; i < multiple.length; i++) {
+    check(
+        multiple[i].startMinutes ==
+            multiple[i - 1].startMinutes + multiple[i - 1].durationMinutes,
+        'Multiple stops must form a continuous timeline.');
+  }
+  final multiDraft = Map<String, dynamic>.from(draft.toJson())
+    ..['additionalPlaces'] = ['Mall', 'Park'];
+  check(
+      TripDraft.fromJson(multiDraft).additionalPlaces.join(',') == 'Mall,Park',
+      'Additional places must survive saving.');
+  final oldDraft = Map<String, dynamic>.from(draft.toJson())
+    ..remove('additionalPlaces');
+  check(TripDraft.fromJson(oldDraft).additionalPlaces.isEmpty,
+      'Old drafts must remain compatible.');
+  var duplicateRejected = false;
+  try {
+    buildDayPlan(
+        arrivalMinutes: 480,
+        origin: 'Station',
+        hotel: 'Hotel',
+        attraction: 'Mall',
+        restMinutes: 0,
+        travelMinutes: 15,
+        additionalPlaces: ['mall']);
+  } on ArgumentError {
+    duplicateRejected = true;
+  }
+  check(duplicateRejected, 'Repeated outings must be rejected.');
+  var midnightRejected = false;
+  try {
+    buildDayPlan(
+        arrivalMinutes: 1200,
+        origin: 'Station',
+        hotel: 'Hotel',
+        attraction: 'Museum',
+        restMinutes: 0,
+        travelMinutes: 30,
+        additionalPlaces: ['Mall', 'Park']);
+  } on ArgumentError {
+    midnightRejected = true;
+  }
+  check(midnightRejected, 'Extra outings must not run past midnight.');
   print(
       'Core checks passed: day-plan arithmetic and validation, URL encoding, and destination integrity.');
 }

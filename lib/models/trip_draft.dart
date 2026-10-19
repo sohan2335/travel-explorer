@@ -12,9 +12,11 @@ class TripDraft {
       required this.attraction,
       required this.pace,
       required this.hasPlan,
+      this.additionalPlaces = const [],
       this.restaurant = '',
       this.visitMinutes = 0});
 
+  final List<String> additionalPlaces;
   final String destinationId;
   final String origin;
   final String hotel;
@@ -31,6 +33,7 @@ class TripDraft {
 
   Map<String, Object> toJson() => {
         'version': 1,
+        'additionalPlaces': additionalPlaces,
         'destinationId': destinationId,
         'origin': origin,
         'hotel': hotel,
@@ -61,6 +64,11 @@ class TripDraft {
       return value;
     }
 
+    final extra = data['additionalPlaces'] ?? <String>[];
+    if (extra is! List ||
+        extra.length > 4 ||
+        extra.any((v) => v is! String || v.trim().isEmpty || v.length > 500))
+      throw const FormatException('Invalid extra stops');
     final mode = text('mode');
     final pace = text('pace');
     final rest = number('restMinutes', 0, 180);
@@ -77,6 +85,7 @@ class TripDraft {
       throw const FormatException('Unsupported saved draft');
     }
     return TripDraft(
+        additionalPlaces: List<String>.unmodifiable(extra.cast<String>()),
         destinationId: text('destinationId'),
         origin: text('origin'),
         hotel: text('hotel'),

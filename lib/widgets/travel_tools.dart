@@ -53,6 +53,7 @@ class _TravelToolsState extends State<TravelTools> {
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
         initialValue: _stayStyle,
+        isExpanded: true,
         decoration: const InputDecoration(labelText: 'Hotel search preference'),
         items: const ['Budget', 'Comfort', 'Family-friendly']
             .map((style) => DropdownMenuItem(value: style, child: Text(style)))

@@ -32,7 +32,17 @@ List<DayPlanStop> buildDayPlan({
   String pace = 'Balanced',
   String mealPlace = '',
   int? visitMinutesOverride,
+  List<String> additionalPlaces = const [],
 }) {
+  if (additionalPlaces.length > 4 ||
+      additionalPlaces
+          .any((name) => name.trim().isEmpty || name.length > 500) ||
+      {
+            attraction.trim().toLowerCase(),
+            ...additionalPlaces.map((p) => p.trim().toLowerCase())
+          }.length !=
+          additionalPlaces.length + 1)
+    throw ArgumentError('Choose up to five different outings.');
   final paceMinutes = visitMinutesByPace[pace];
   final visitMinutes = visitMinutesOverride ?? paceMinutes;
   if (paceMinutes == null || visitMinutes == null)
@@ -61,6 +71,7 @@ List<DayPlanStop> buildDayPlan({
       hotelReadyMinutes > hotelArrival ? hotelReadyMinutes - hotelArrival : 0;
   final mealTransfer = mealPlace.trim().isEmpty ? 0 : travelMinutes;
   final end = arrivalMinutes +
+      additionalPlaces.length * (travelMinutes + visitMinutes) +
       mealTransfer +
       120 +
       visitMinutes +
@@ -99,20 +110,28 @@ List<DayPlanStop> buildDayPlan({
       from: hotel, to: attraction);
   add(visitMinutes, 'Explore $attraction',
       '$pace pace: $visitMinutes minutes for this visit. Confirm opening hours and entry tickets.');
+  var lastPlace = attraction;
+  for (final place in additionalPlaces) {
+    add(travelMinutes, 'Travel to $place',
+        'Your transfer buffer; check the route and opening hours.',
+        from: lastPlace, to: place);
+    add(visitMinutes, 'Explore $place',
+        '$visitMinutes minutes for this stop. Confirm availability and any tickets.');
+    lastPlace = place;
+  }
   if (mealTransfer > 0) {
     add(mealTransfer, 'Travel to your meal stop',
         'Your transfer buffer; check the route to ${mealPlace.trim()}.',
-        from: attraction, to: mealPlace.trim());
+        from: lastPlace, to: mealPlace.trim());
   }
   add(
       60,
       'Meal & a break',
       mealPlace.trim().isEmpty
           ? 'Choose a suitable meal stop close to the attraction.'
-          : 'Meal stop: ${mealPlace.trim()}. Check the route from $attraction and allow extra transfer time if needed.');
+          : 'Meal stop: ${mealPlace.trim()}. Check the route from $lastPlace and allow extra transfer time if needed.');
   add(travelMinutes, 'Return to your hotel',
       'Check the return route and last public-transport service.',
-      from: mealPlace.trim().isEmpty ? attraction : mealPlace.trim(),
-      to: hotel);
+      from: mealPlace.trim().isEmpty ? lastPlace : mealPlace.trim(), to: hotel);
   return List.unmodifiable(stops);
 }

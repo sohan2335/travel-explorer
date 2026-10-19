@@ -10,10 +10,10 @@ A small Flutter app for the GDGC VNRVJIET App Development volunteer recruitment 
 - Case-insensitive city search and country filtering, plus activity choices for Dining, Shopping, Events, Stays, Adventure parks and Water parks.
 - Clickable destination/attraction names open background and surroundings links.
 - Nearby hotel searches, public transport/cab/walk/bicycle directions, Uber access, and bicycle-rental searches.
-- An editable one-day timetable: arrival, hotel arrangements, rest, one attraction, meal, and return; copy the outline to keep it.
-- A separate Wishlist screen with immediate add/remove updates.
+- An editable one-day timetable: arrival, hotel arrangements, rest, up to five outings, meal, and return; copy the outline to keep it.
+- A Hotlists screen with saved cities and trip drafts, plus Home and Search in a floating bottom bar.
 - Video-inspired discovery UI: near-black backgrounds, charcoal surfaces, colourful category tiles, large city photos and source-linked place cards.
-- Stays, Food, Adventure, Water parks and Shopping for every city, with a public Neon directory and citywide Maps searches.
+- Stays, Dining, Activities, Water parks and Shopping for every city, with a public Neon directory and citywide Maps searches.
 - Use a directory stay, restaurant or outing in the planner; customise the visit duration and save the draft.
 - Responsive layout, empty states, and image-loading/error placeholders.
 
@@ -101,3 +101,6 @@ The database is connected; public web hosting is a separate step. A manual GitHu
 
 ## City-first update — 19 October 2026
 The app now opens a city category pop-up from each city photo, with citywide venue search, an Events discovery link and a profile screen. The palette uses near-black and charcoal with purple accents. See [the flow and login guide](docs/CITY_FIRST_AND_LOGIN.md) for implementation, testing and limitations. Web Google/email authentication is connected to Neon; completed account login still needs a user verification. Saved trips remain device-local.
+
+
+The latest version adds large activity tiles and a route with up to five outings. In a city's day planner, use **Choose more stops**, select or enter venues, reorder them, choose a visit duration and generate the timetable. Google login now completes its callback and was verified with a signed-in account. All 19 Flutter tests pass. See [the current flow and implementation guide](docs/CITY_FIRST_AND_LOGIN.md).

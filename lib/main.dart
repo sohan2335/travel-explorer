@@ -63,10 +63,24 @@ class _TravelExplorerAppState extends State<TravelExplorerApp> {
             primary: const Color(0xFFC3AEFF),
             secondary: const Color(0xFFFFC78D),
             surface: const Color(0xFF19191C),
+            onSurfaceVariant: const Color(0xFFCECED5),
+            surfaceContainerHighest: const Color(0xFF303034),
             onSurface: const Color(0xFFF7F7F8)),
         scaffoldBackgroundColor: const Color(0xFF0E0E10),
         appBarTheme: const AppBarTheme(
             backgroundColor: Color(0xFF0E0E10), scrolledUnderElevation: 0),
+        filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12))),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12))),
+        textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(minimumSize: const Size(48, 48))),
         cardTheme: CardThemeData(
             color: const Color(0xFF1C1C20),
             elevation: 0,

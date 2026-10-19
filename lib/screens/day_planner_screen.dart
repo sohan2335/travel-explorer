@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/destination.dart';
+import '../services/place_catalog.dart';
 import '../models/day_plan.dart';
 import '../models/trip_draft.dart';
 import '../state/travel_controller.dart';
@@ -38,6 +39,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
   String _pace = 'Balanced';
   int? _visit;
   late String _attraction;
+  List<String> _additionalPlaces = [];
   List<DayPlanStop>? _plan;
   String? _error;
   bool _saving = false;
@@ -62,6 +64,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
       _mode = draft.mode;
       _pace = draft.pace;
       _attraction = draft.attraction;
+      _additionalPlaces = List.of(draft.additionalPlaces);
       if (draft.hasPlan) {
         try {
           _plan = _calculatePlan();
@@ -80,6 +83,8 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     }
     if (widget.initialAttraction != null) {
       _attraction = widget.initialAttraction!;
+      _additionalPlaces
+          .removeWhere((p) => p.toLowerCase() == _attraction.toLowerCase());
       _clearPlan();
     }
     if (widget.initialRestaurant != null) {
@@ -99,7 +104,113 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
         pace: _pace,
         mealPlace: _restaurant.text.trim(),
         visitMinutesOverride: _visit,
+        additionalPlaces: _additionalPlaces,
       );
+
+  Future<void> _pickStops() async {
+    final catalog = PlaceCatalog.load();
+    final selected = List<String>.of(_additionalPlaces);
+    final custom = TextEditingController();
+    await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (sheetContext) => StatefulBuilder(
+            builder: (context, update) => Padding(
+                  padding: EdgeInsets.fromLTRB(
+                      20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
+                  child: SizedBox(
+                      height: MediaQuery.sizeOf(context).height * .7,
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Add stops in ${widget.destination.name}',
+                                style: Theme.of(context).textTheme.titleLarge),
+                            const Text(
+                                'Select up to four extra places. Selected order becomes your route.'),
+                            Expanded(
+                                child: FutureBuilder<CatalogResult>(
+                                    future: catalog,
+                                    builder: (context, snapshot) {
+                                      final names = <String>{
+                                        ...widget.destination.attractions
+                                            .map((a) => a.name),
+                                        ...?snapshot.data?.places
+                                            .where((p) =>
+                                                p.cityId ==
+                                                    widget.destination.id &&
+                                                p.kind != 'hotel')
+                                            .map((p) => p.name),
+                                        ...selected
+                                      }
+                                          .where((p) =>
+                                              p.toLowerCase() !=
+                                              _attraction.toLowerCase())
+                                          .toList();
+                                      return ListView(children: [
+                                        if (snapshot.connectionState !=
+                                            ConnectionState.done)
+                                          const LinearProgressIndicator(),
+                                        for (final name in names)
+                                          CheckboxListTile(
+                                              contentPadding: EdgeInsets.zero,
+                                              title: Text(name),
+                                              value: selected.contains(name),
+                                              onChanged: selected.length >= 4 &&
+                                                      !selected.contains(name)
+                                                  ? null
+                                                  : (checked) => update(() {
+                                                        if (checked == true)
+                                                          selected.add(name);
+                                                        else
+                                                          selected.remove(name);
+                                                      })),
+                                      ]);
+                                    })),
+                            Row(children: [
+                              Expanded(
+                                  child: TextField(
+                                      controller: custom,
+                                      maxLength: 500,
+                                      decoration: const InputDecoration(
+                                          labelText:
+                                              'Other venue or event location',
+                                          counterText: ''))),
+                              IconButton(
+                                  tooltip: 'Add entered place',
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () {
+                                    final name = custom.text.trim();
+                                    if (name.isNotEmpty &&
+                                        name.toLowerCase() !=
+                                            _attraction.toLowerCase() &&
+                                        !selected.any((p) =>
+                                            p.toLowerCase() ==
+                                            name.toLowerCase()) &&
+                                        selected.length < 4)
+                                      update(() {
+                                        selected.add(name);
+                                        custom.clear();
+                                      });
+                                  })
+                            ]),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _additionalPlaces = selected;
+                                    _clearPlan();
+                                  });
+                                  Navigator.pop(sheetContext);
+                                },
+                                child:
+                                    Text('Use ${selected.length} extra stops')),
+                          ])),
+                )));
+    // Let the sheet finish its closing animation before disposing its text field.
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    custom.dispose();
+  }
 
   Future<void> _saveDraft() async {
     setState(() => _saving = true);
@@ -109,6 +220,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
       hotel: _hotel.text.trim(),
       restaurant: _restaurant.text.trim(),
       visitMinutes: _visit ?? 0,
+      additionalPlaces: List.of(_additionalPlaces),
       arrivalMinutes: _arrival.hour * 60 + _arrival.minute,
       hotelReadyMinutes: _hotelReady.hour * 60 + _hotelReady.minute,
       restMinutes: _rest,
@@ -214,7 +326,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                             style: Theme.of(context).textTheme.headlineMedium),
                         const SizedBox(height: 12),
                         const Text(
-                            'Create an editable arrival-day outline with one attraction. Times are your planning buffers, not live journey estimates. Save the draft to resume it on this device.'),
+                            'Create an editable day plan with up to five outings. Times are your planning buffers, not live journey estimates. Save the draft to resume it on this device.'),
                         if (widget.controller.storageMessage != null)
                           Padding(
                               padding: const EdgeInsets.only(top: 12),
@@ -302,9 +414,50 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                               if (value != null)
                                 setState(() {
                                   _attraction = value;
+                                  _additionalPlaces.removeWhere((p) =>
+                                      p.toLowerCase() == value.toLowerCase());
                                   _clearPlan();
                                 });
                             }),
+                        const SizedBox(height: 16),
+                        Text('More stops in your day',
+                            style: Theme.of(context).textTheme.titleMedium),
+                        const Text(
+                            'Add malls, sights, parks or an event venue. Each outing uses the visit duration below and gets a travel buffer. Check event times yourself.'),
+                        for (var index = 0;
+                            index < _additionalPlaces.length;
+                            index++)
+                          ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Text('${index + 2}'),
+                              title: Text(_additionalPlaces[index]),
+                              trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        tooltip: 'Move stop earlier',
+                                        onPressed: index == 0
+                                            ? null
+                                            : () => setState(() {
+                                                  final name = _additionalPlaces
+                                                      .removeAt(index);
+                                                  _additionalPlaces.insert(
+                                                      index - 1, name);
+                                                  _clearPlan();
+                                                }),
+                                        icon: const Icon(Icons.arrow_upward)),
+                                    IconButton(
+                                        tooltip: 'Remove stop',
+                                        onPressed: () => setState(() {
+                                              _additionalPlaces.removeAt(index);
+                                              _clearPlan();
+                                            }),
+                                        icon: const Icon(Icons.close)),
+                                  ])),
+                        OutlinedButton.icon(
+                            onPressed: _pickStops,
+                            icon: const Icon(Icons.add_location_alt_outlined),
+                            label: const Text('Choose more stops')),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
                             initialValue: _mode,
@@ -350,7 +503,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                 'visit-${_visit ?? visitMinutesByPace[_pace]}'),
                             initialValue: _visit ?? visitMinutesByPace[_pace],
                             decoration: const InputDecoration(
-                                labelText: 'Time at the main attraction'),
+                                labelText: 'Visit duration per outing'),
                             items: const [30, 60, 90, 120, 180, 240, 360, 480]
                                 .map((m) => DropdownMenuItem(
                                     value: m, child: Text('$m minutes')))
@@ -474,7 +627,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                             url: mapSearch(_restaurant.text
                                                     .trim()
                                                     .isEmpty
-                                                ? 'restaurants near $_attraction, $city'
+                                                ? 'restaurants near ${_additionalPlaces.isEmpty ? _attraction : _additionalPlaces.last}, $city'
                                                 : '${_restaurant.text.trim()}, $city')),
                                     ]),
                               )),
