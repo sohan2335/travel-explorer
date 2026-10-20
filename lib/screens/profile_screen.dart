@@ -5,13 +5,21 @@ import '../experience/flow_navigation.dart';
 import '../experience/preferences_screen.dart';
 import '../experience/onboarding_screen.dart';
 
+typedef ProfileRequest =
+    Future<Map<String, dynamic>?> Function(
+      String path, [
+      Map<String, dynamic>? data,
+    ]);
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
     this.embedded = false,
     this.onExplore,
     this.launchMode = false,
+    this.request = authRequest,
   });
+  final ProfileRequest request;
   final bool embedded;
   final bool launchMode;
   final VoidCallback? onExplore;
@@ -24,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _email = TextEditingController(),
       _password = TextEditingController(),
       _name = TextEditingController();
-  bool _busy = true, _signup = false, _hide = true;
+  bool _busy = true, _signup = false, _hide = true, _leaving = false;
   String? _message;
   Map<String, dynamic>? _user;
   @override
@@ -35,11 +43,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _restore() async {
     try {
-      final result = await authRequest('get-session');
-      if (mounted) {
+      final result = await widget.request('get-session');
+      if (mounted && !_leaving) {
         setState(() => _user = result?['user'] as Map<String, dynamic>?);
         await _observeSession();
-        if (mounted && widget.launchMode && _user != null) {
+        if (mounted && widget.launchMode && _user != null && !_leaving) {
+          _leaving = true;
           continueExperience(context);
         }
       }
@@ -81,13 +90,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _emailLogin() async {
     if (!_form.currentState!.validate()) return;
     await _run(() async {
-      await authRequest(_signup ? 'sign-up/email' : 'sign-in/email', {
+      await widget.request(_signup ? 'sign-up/email' : 'sign-in/email', {
         'email': _email.text.trim(),
         'password': _password.text,
         if (_signup) 'name': _name.text.trim(),
       });
       _password.clear();
-      final result = await authRequest('get-session');
+      final result = await widget.request('get-session');
       if (mounted) {
         setState(() {
           _user = result?['user'] as Map<String, dynamic>?;
@@ -101,7 +110,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _user != null &&
             (widget.launchMode ||
                 !(ExperienceScope.maybeOf(context)?.controller.introDone ??
+                    true) ||
+                !(ExperienceScope.maybeOf(
+                      context,
+                    )?.controller.preferencesDone ??
                     true))) {
+          _leaving = true;
           continueExperience(context);
         }
       }
@@ -191,8 +205,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 24),
             _preferenceLinks(context),
-                  const SizedBox(height: 16),
-                  if (_busy) const LinearProgressIndicator(),
+            const SizedBox(height: 16),
+            if (_busy) const LinearProgressIndicator(),
             if (_message != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -207,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: _busy
                     ? null
                     : () => _run(() async {
-                        await authRequest('sign-out', {});
+                        await widget.request('sign-out', {});
                         if (mounted) {
                           setState(() => _user = null);
                           await _observeSession();
@@ -222,7 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: _busy
                     ? null
                     : () => _run(() async {
-                        final result = await authRequest('sign-in/social', {
+                        final result = await widget.request('sign-in/social', {
                           'provider': 'google',
                           'callbackURL': Uri.base
                               .replace(
@@ -315,7 +329,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
             TextButton(
               onPressed: widget.launchMode
-                  ? () => continueExperience(context)
+                  ? () async {
+                      if (_leaving) return;
+                      _leaving = true;
+                      await ExperienceScope.of(
+                        context,
+                      ).controller.activate(null);
+                      if (context.mounted) continueExperience(context);
+                    }
                   : widget.onExplore ?? () => Navigator.pop(context),
               child: Text(
                 widget.launchMode ? 'Explore as guest' : 'Back to exploring',

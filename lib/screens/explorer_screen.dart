@@ -35,9 +35,6 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
   @override
   void initState() {
     super.initState();
-    if (Uri.base.queryParameters.containsKey('neon_auth_session_verifier')) {
-      _tab = 4;
-    }
     _search = TextEditingController(text: widget.controller.query);
   }
 

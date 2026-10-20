@@ -33,6 +33,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _launch() async {
+    final elapsed = Stopwatch()..start();
     final scope = ExperienceScope.of(context);
     final experience = scope.controller;
     final localReady = Future.wait([
@@ -65,6 +66,13 @@ class _SplashScreenState extends State<SplashScreen>
         await Future<void>.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
         await localReady;
+        final remaining = 2600 - elapsed.elapsedMilliseconds;
+        if (remaining > 0) {
+          await experience.identityReady.timeout(
+            Duration(milliseconds: remaining),
+            onTimeout: () {},
+          );
+        }
         await _animation.reverse().orCancel;
       } else {
         await localReady;
@@ -90,41 +98,43 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
       child: Center(
-        child: FadeTransition(
-          opacity: _animation,
-          child: ScaleTransition(
-            scale: Tween(begin: .85, end: 1.0).animate(
-              CurvedAnimation(parent: _animation, curve: Curves.easeOut),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/branding/compass.png',
-                    width: 144,
-                    height: 144,
-                    excludeFromSemantics: true,
-                  ),
-                  FadeTransition(
-                    opacity: CurvedAnimation(
-                      parent: _animation,
-                      curve: const Interval(.25, 1),
+        child: SingleChildScrollView(
+          child: FadeTransition(
+            opacity: _animation,
+            child: ScaleTransition(
+              scale: Tween(begin: .85, end: 1.0).animate(
+                CurvedAnimation(parent: _animation, curve: Curves.easeOut),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/branding/compass.png',
+                      width: 144,
+                      height: 144,
+                      excludeFromSemantics: true,
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Travel Explorer',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text('Your city, your way'),
-                      ],
+                    FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: _animation,
+                        curve: const Interval(.25, 1),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Travel Explorer',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Your city, your way'),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

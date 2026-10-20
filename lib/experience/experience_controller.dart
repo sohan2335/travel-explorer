@@ -29,6 +29,7 @@ class ExperienceController extends ChangeNotifier {
   int _revision = 0;
   bool _disposed = false;
   Future<void> _writes = Future.value();
+  Future<void> identityReady = Future.value();
 
   String get key => keyFor(userId);
   static String keyFor(String? id) =>
@@ -69,6 +70,12 @@ class ExperienceController extends ChangeNotifier {
     String? id, {
     bool remember = true,
     bool verified = false,
+  }) => identityReady = _activate(id, remember: remember, verified: verified);
+
+  Future<void> _activate(
+    String? id, {
+    required bool remember,
+    required bool verified,
   }) async {
     final revision = ++_revision;
     userId = id;

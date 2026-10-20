@@ -125,6 +125,10 @@ Flutter calls Neon's HTTPS Auth and Data APIs. It requests a short-lived anonymo
 
 ## UI decisions
 
+- Start with the same dark compass identity, followed by original bundled travel photos and clear pill controls.
+- Use Flutter's built-in fade/scale/slide animations and respect reduced-motion settings.
+- Keep setup optional, show only real directory matches, and leave saved timetables untouched.
+
 ![Refreshed dark Home](docs/screenshots/ui-refresh-home-mobile.jpg)
 
 ![Refreshed city guide](docs/screenshots/ui-refresh-guide.jpg)
@@ -143,3 +147,20 @@ Flutter calls Neon's HTTPS Auth and Data APIs. It requests a short-lived anonymo
 UI refresh verification, changed files, limitations and the interview walkthrough: [UI refresh report](docs/UI_REFRESH_REPORT.md).
 
 Font support needs Flutter 3.35+ / Dart 3.9+. Keep `pubspec.lock` when installing this app. The lock selects a compatible Apple path-provider implementation to avoid a Windows native-assets build failure with space-containing SDK paths; no extra direct package was added.
+
+
+## Onboarding & preferences
+
+Every launch shows a dark native/web splash, then a short in-app compass animation (600 ms entrance, 600 ms hold, 400 ms exit). The next route fades and slides up over 350 ms. Reduced motion skips these animations. Local restoration has a three-second startup budget; the background session request is never awaited by the splash.
+
+First-time signed-in travellers see three photo pages, then optional interests, trip style and travel-company choices. Logged-out travellers see the existing login screen and can still choose **Explore as guest**. **Skip** completes the intro; **Skip for now** acknowledges preferences without requiring choices. Profile includes **Edit preferences** and **Replay intro**.
+
+Intro and preferences use separate `travel_explorer.experience.v1.<user ID>` keys through the existing LocalStore wrapper, falling back to a per-device key for guests. Only the last non-secret user ID is cached as an offline launch hint: it is not a credential and cannot authenticate an API request. Authentication remains controlled by the unchanged Neon session service. Existing saved-city and trip-draft storage is unchanged and remains device-local. A Google verifier callback goes through the existing login screen to avoid exchanging it twice.
+
+Selected interests appear first in Home's activity tiles. **Based on your interests** appears only when at least two existing directory records match the selected city and categories. It is simple category matching, not AI. Trip style suggests about 3/4/5 stops and 120/90/60-minute visits for Relaxed/Balanced/Packed new plans. Users can change pace and duration in the planner. Stored drafts keep their settings. Travel-company choice is saved as context, without claims about venue suitability. Budget and dietary questions are omitted because the venue model has no such fields.
+
+The three bundled onboarding JPEGs are each under 300 KB. Native splash configuration is in `flutter_native_splash.yaml`; regenerate with `dart run flutter_native_splash:create`. Keep the committed Android normal-window backgrounds dark after regeneration. Android 12+ resources and a dark web loader are included. iOS generation is disabled because this repository has no iOS project.
+
+Verified with 50 automated tests, the web release build and mobile browser checks. [Detailed checks, limitations, changed files and an interview explanation](docs/ONBOARDING_REPORT.md).
+
+![Mobile introduction](docs/screenshots/onboarding-mobile.jpg)

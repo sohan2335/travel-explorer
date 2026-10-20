@@ -50,6 +50,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               : saved.message!,
         ),
       ),
+      snackBarAnimationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
     );
     await widget.onDone();
   }
