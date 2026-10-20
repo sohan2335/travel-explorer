@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
     final authCallback = Uri.base.queryParameters.containsKey(
       'neon_auth_session_verifier',
     );
-    if (!authCallback)
+    if (!authCallback) {
       unawaited(() async {
         try {
           final result =
@@ -58,6 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
           /* Offline: use only the local launch hint, not an auth claim. */
         }
       }());
+    }
     try {
       if (!MediaQuery.disableAnimationsOf(context)) {
         await _animation.forward().orCancel;

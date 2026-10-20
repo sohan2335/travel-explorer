@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'experience_controller.dart';
+import 'onboarding_screen.dart';
 
 PageRouteBuilder<void> experienceRoute(BuildContext context, Widget screen) {
   final reduced = MediaQuery.disableAnimationsOf(context);
@@ -26,6 +27,23 @@ PageRouteBuilder<void> experienceRoute(BuildContext context, Widget screen) {
 void replaceExperience(BuildContext context, Widget screen) =>
     Navigator.of(context).pushReplacement(experienceRoute(context, screen));
 
-// The first-run screens are added in the next two parts.
-void continueExperience(BuildContext context) =>
-    replaceExperience(context, ExperienceScope.of(context).homeBuilder());
+void continueExperience(BuildContext context) {
+  final scope = ExperienceScope.of(context);
+  if (!scope.controller.introDone) {
+    replaceExperience(
+      context,
+      Builder(
+        builder: (introContext) => OnboardingScreen(
+          onDone: () async {
+            await scope.controller.completeIntro();
+            if (introContext.mounted) {
+              replaceExperience(introContext, scope.homeBuilder());
+            }
+          },
+        ),
+      ),
+    );
+  } else {
+    replaceExperience(context, scope.homeBuilder());
+  }
+}
