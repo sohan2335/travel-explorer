@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/destination.dart';
+import '../experience/experience_controller.dart';
 import '../state/travel_controller.dart';
 import 'day_planner_screen.dart';
 import '../widgets/city_venue_picker.dart';
@@ -84,6 +85,7 @@ class _MyDayScreenState extends State<MyDayScreen> {
       listenable: widget.controller,
       builder: (context, _) {
         final day = widget.controller.myDayFor(widget.destination.id);
+        final preference = ExperienceScope.maybeOf(context)?.controller;
         return Scaffold(
           appBar: AppBar(
               title: Text('My day in ${widget.destination.name}'),
@@ -122,6 +124,10 @@ class _MyDayScreenState extends State<MyDayScreen> {
                         style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: 10),
                     const Text('Order your stops, then check timing.'),
+                    if (preference?.tripStyle != null)
+                      Padding(padding: const EdgeInsets.only(top: 16), child: Card(child: Padding(
+                        padding: const EdgeInsets.all(16), child: Text(
+                          '${preference!.tripStyle} suggestion: about ${preference.suggestedStops} stops, ${preference.suggestedMinutes} minutes per visit. Change pace or duration in the planner. Saved plans keep their settings.')))),
                     const SizedBox(height: 20),
                     if (day.hotel.isNotEmpty)
                       Card(

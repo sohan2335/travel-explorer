@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../experience/experience_controller.dart';
 import '../experience/flow_navigation.dart';
+import '../experience/preferences_screen.dart';
+import '../experience/onboarding_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -106,6 +108,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  Widget _preferenceLinks(BuildContext context) {
+    if (widget.launchMode || ExperienceScope.maybeOf(context) == null) {
+      return const SizedBox.shrink();
+    }
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.tune),
+            title: const Text('Edit preferences'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              experienceRoute(
+                context,
+                Builder(
+                  builder: (pageContext) => PreferencesScreen(
+                    editing: true,
+                    onDone: () async => Navigator.pop(pageContext),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.replay),
+            title: const Text('Replay intro'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              experienceRoute(
+                context,
+                Builder(
+                  builder: (pageContext) => OnboardingScreen(
+                    onDone: () async => Navigator.pop(pageContext),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _email.dispose();
@@ -143,7 +190,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            if (_busy) const LinearProgressIndicator(),
+            _preferenceLinks(context),
+                  const SizedBox(height: 16),
+                  if (_busy) const LinearProgressIndicator(),
             if (_message != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),

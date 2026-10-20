@@ -43,19 +43,22 @@ class DiscoveryShortcuts extends StatelessWidget {
       {super.key,
       required this.onSelected,
       this.selected,
+      this.preferred = const {},
       this.includePlan = true,
       this.enabled = true});
   final ValueChanged<String> onSelected;
   final String? selected;
   final bool includePlan;
   final bool enabled;
+  final Set<String> preferred;
   @override
   Widget build(BuildContext context) =>
       LayoutBuilder(builder: (context, constraints) {
         final compact = constraints.maxWidth < 650;
         final width = compact ? (constraints.maxWidth - 32) / 3 : 128.0;
         return Wrap(spacing: 16, runSpacing: 16, children: [
-          for (final kind in [...discoveryLabels.keys, if (includePlan) 'plan'])
+          for (final kind in [...discoveryLabels.keys.where(preferred.contains),
+            ...discoveryLabels.keys.where((id) => !preferred.contains(id)), if (includePlan) 'plan'])
             SizedBox(
                 width: width,
                 height: 96 + MediaQuery.textScalerOf(context).scale(40),

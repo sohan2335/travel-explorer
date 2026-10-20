@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/destination.dart';
+import '../experience/experience_controller.dart';
 import '../services/place_catalog.dart';
 import '../models/day_plan.dart';
 import '../models/trip_draft.dart';
@@ -51,6 +52,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     super.initState();
     _attraction = widget.destination.attractions.first.name;
     final draft = widget.controller.draftFor(widget.destination.id);
+    final style = context.getInheritedWidgetOfExactType<ExperienceScope>()?.controller.tripStyle;
+    if (draft == null && style != null) {
+      _pace = style;
+      _rest = restMinutesByPace[style]!;
+      _visit = visitMinutesByPace[style];
+    }
     if (draft != null) {
       _origin.text = draft.origin;
       _hotel.text = draft.hotel;

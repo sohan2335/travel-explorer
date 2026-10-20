@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/destinations.dart';
+import '../experience/experience_controller.dart';
+import '../experience/interest_venues.dart';
 import '../models/destination.dart';
 import '../state/travel_controller.dart';
 import '../widgets/destination_image.dart';
@@ -58,6 +60,7 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
+    final experience = ExperienceScope.maybeOf(context)?.controller;
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
@@ -146,6 +149,8 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                       Text(saved
                                           ? 'Your favourite corners of the world, ready for another day.'
                                           : 'Stays, good food and little adventures. All in one place.'),
+                                      if (experience?.message != null)
+                                        Padding(padding: const EdgeInsets.only(top: 16), child: Text(experience!.message!)),
                                       if (controller.storageMessage != null)
                                         Padding(
                                             padding:
@@ -357,6 +362,7 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                                   .titleMedium),
                                           const SizedBox(height: 10),
                                           DiscoveryShortcuts(
+                                              preferred: experience?.interests ?? const {},
                                               selected: _activity,
                                               includePlan: false,
                                               enabled: _chosenCity != null,
@@ -377,6 +383,8 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                               }),
                                         ],
                                       ],
+                                      if (_tab == 0 && _chosenCity != null && (experience?.interests.isNotEmpty ?? false))
+                                        InterestVenues(city: _chosenCity!, interests: experience!.interests, travel: controller),
                                       const SizedBox(height: 20),
                                       Text(
                                           '${items.length} ${saved ? 'saved places' : 'cities to explore'}',
