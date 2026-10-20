@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                   const Text(
-                      'Explore freely as a guest. Your wishlist and trip drafts stay on this device; signing in does not sync them.',
+                      'Explore freely as a guest. Your saved cities and trip drafts stay on this device; signing in does not sync them.',
                       textAlign: TextAlign.center),
                   const SizedBox(height: 24),
                   if (_busy) const LinearProgressIndicator(),

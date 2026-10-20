@@ -13,10 +13,12 @@ class DayPlannerScreen extends StatefulWidget {
       {super.key,
       required this.destination,
       required this.controller,
+      this.initialStops,
       this.initialHotel,
       this.initialAttraction,
       this.initialRestaurant,
       this.initialVisitMinutes});
+  final List<String>? initialStops;
   final Destination destination;
   final String? initialHotel, initialAttraction, initialRestaurant;
   final TravelController controller;
@@ -72,6 +74,11 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
           _error = error.message.toString();
         }
       }
+    }
+    if (widget.initialStops != null && widget.initialStops!.isNotEmpty) {
+      _attraction = widget.initialStops!.first;
+      _additionalPlaces = widget.initialStops!.skip(1).toList();
+      _clearPlan();
     }
     if (widget.initialVisitMinutes != null) {
       _visit = widget.initialVisitMinutes;

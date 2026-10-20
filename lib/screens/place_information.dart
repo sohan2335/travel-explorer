@@ -3,9 +3,11 @@ import '../models/destination.dart';
 import '../services/travel_links.dart';
 import '../widgets/destination_image.dart';
 import '../widgets/travel_link_button.dart';
+import '../widgets/my_day_actions.dart';
+import '../state/travel_controller.dart';
 
 Future<void> showPlaceInformation(BuildContext context, Destination destination,
-    {Attraction? attraction}) {
+    {Attraction? attraction, TravelController? controller}) {
   final name = attraction?.name ?? destination.name;
   final description = attraction == null
       ? destination.description
@@ -45,6 +47,15 @@ Future<void> showPlaceInformation(BuildContext context, Destination destination,
               const SizedBox(height: 20),
               Text(description, style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 16),
+              if (controller != null)
+                MyDayActions(
+                    destination: destination,
+                    controller: controller,
+                    name: attraction?.name,
+                    placeId: attraction == null
+                        ? null
+                        : '${destination.id}:sight:${attraction.name}'),
+              const SizedBox(height: 12),
               Wrap(spacing: 8, runSpacing: 8, children: [
                 TravelLinkButton(
                     label: 'Read about this place',
@@ -74,7 +85,7 @@ Future<void> showPlaceInformation(BuildContext context, Destination destination,
                     title: Text(other.name),
                     trailing: const Icon(Icons.open_in_new, size: 18),
                     onTap: () => showPlaceInformation(context, destination,
-                        attraction: other)),
+                        attraction: other, controller: controller)),
               const SizedBox(height: 16),
               Text('Content: ${destination.source}',
                   style: Theme.of(context).textTheme.bodySmall),

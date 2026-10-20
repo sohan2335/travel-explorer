@@ -5,13 +5,13 @@ A small Flutter app for the GDGC VNRVJIET App Development volunteer recruitment 
 ## Features
 
 - Ten destinations in India, France and Italy across Beaches, Mountains, Heritage, and Adventure.
-- Swipeable city cards with photos, names, locations and wishlist buttons.
+- A city chooser at the top of Home; choose a city before opening activity categories. Search and Saved city cards retain their save buttons.
 - Details with a description, best visiting season, and 2-3 named attractions with images.
 - Case-insensitive city search and country filtering, plus activity choices for Dining, Shopping, Events, Stays, Adventure parks and Water parks.
 - Clickable destination/attraction names open background and surroundings links.
 - Nearby hotel searches, public transport/cab/walk/bicycle directions, Uber access, and bicycle-rental searches.
 - An editable one-day timetable: arrival, hotel arrangements, rest, up to five outings, meal, and return; copy the outline to keep it.
-- A Hotlists screen with saved cities and trip drafts, plus Home and Search in a floating bottom bar.
+- A Saved screen with saved cities and trip drafts, plus Home and Search in a floating bottom bar.
 - Video-inspired discovery UI: near-black backgrounds, charcoal surfaces, colourful category tiles, large city photos and source-linked place cards.
 - Stays, Dining, Activities, Water parks and Shopping for every city, with a public Neon directory and citywide Maps searches.
 - Use a directory stay, restaurant or outing in the planner; customise the visit duration and save the draft.
@@ -70,7 +70,7 @@ External links work through a small web helper and an Android platform bridge. A
 
 Captured from the running Flutter web app at a phone-sized viewport:
 
-![Home and activity categories](docs/screenshots/activity-categories.jpg)
+![City-first Home](docs/screenshots/city-first-home.jpg)
 ![City discovery](docs/screenshots/city-discovery.jpg)
 ![One-day planner](docs/screenshots/city-plan.jpg)
 
@@ -104,3 +104,20 @@ The app now opens a city category pop-up from each city photo, with citywide ven
 
 
 The latest version adds large activity tiles and a route with up to five outings. In a city's day planner, use **Choose more stops**, select or enter venues, reorder them, choose a visit duration and generate the timetable. Google login now completes its callback and was verified with a signed-in account. All 19 Flutter tests pass. See [the current flow and implementation guide](docs/CITY_FIRST_AND_LOGIN.md).
+
+
+## My day
+Collect outings, a stay and a meal while browsing each city. Reorder your picks in **My day**, then review them in the planner before saving a timetable. Picks persist on this device and can be reopened from Saved. See [the beginner code guide](docs/MY_DAY.md).
+
+![My day preview](docs/screenshots/my-day.jpg)
+
+
+## Latest navigation and My day refinements
+Home asks you to choose a city first, and starts with no activity selected. Activities stay disabled until a city is chosen. The saved-content tab is now named **Saved**.
+
+My day has a short introduction with details behind its info button. **Add to My day** opens a searchable picker limited to the current city, combining bundled sights and the Neon directory (with its offline fallback). Picks retain their directory or local sight ID. **Add a custom stop** remains an explicit fallback, labelled as an unverified location. The app provides per-stop Maps links and route-check links between consecutive outings. At five outings, it disables adding and explains how to make room.
+
+The current place catalog does not include verified coordinates. No straight-line-distance or road-time warning is generated from these names. Maps resolves the selected names and city; check the resolved locations and routes there.
+
+## Security design decision
+Flutter calls Neon's HTTPS Auth and Data APIs. It requests a short-lived anonymous guest token to read the public venue directory. The database restricts that guest role to read-only access using row-level security. No Postgres connection string, database password, Google client secret or administrator API key is embedded in the app. User sessions use browser-managed HTTP-only cookies. Saved cities, My day and trip drafts remain device-local, so logging in does not imply account sync.

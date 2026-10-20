@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import '../models/destination.dart';
 import '../models/trip_draft.dart';
+import '../models/my_day.dart';
 import '../services/local_store.dart';
 
 /// Holds filters, saved IDs, and one saved trip draft per destination.
@@ -13,6 +14,12 @@ class TravelController extends ChangeNotifier {
         _destinations = List<Destination>.unmodifiable(destinations);
 
   static const wishlistKey = 'travel_explorer.wishlist.v1';
+  static const myDayKey = 'travel_explorer.my_day.v1';
+  final _dayPicks = <String, MyDay>{};
+  MyDay myDayFor(String cityId) => _dayPicks[cityId] ?? MyDay();
+  List<String> get pickedCities =>
+      List.unmodifiable(_dayPicks.keys.where((id) => _dayPicks[id]!.count > 0));
+
   static const draftsKey = 'travel_explorer.drafts.v1';
   final LocalStore? _store;
   final _drafts = <String, TripDraft>{};
@@ -64,6 +71,27 @@ class TravelController extends ChangeNotifier {
       storageMessage =
           'Trip storage could not be read. You can still plan in this session.';
     }
+    try {
+      final text = await _store.read(myDayKey);
+      if (text != null) {
+        final decoded = jsonDecode(text);
+        if (decoded is! Map<String, dynamic>)
+          throw const FormatException('Invalid day picks');
+        for (final entry in decoded.entries) {
+          if (!_destinations.any((d) => d.id == entry.key)) continue;
+          try {
+            _dayPicks[entry.key] =
+                MyDay.fromJson(Map<String, dynamic>.from(entry.value as Map));
+          } catch (_) {
+            storageMessage =
+                'Some My day picks could not be read. Other saved data is available.';
+          }
+        }
+      }
+    } catch (_) {
+      storageMessage =
+          'My day could not be restored. You can still collect places this session.';
+    }
     _notify();
   }
 
@@ -87,6 +115,82 @@ class TravelController extends ChangeNotifier {
       _notify();
       return false;
     }
+  }
+
+  Future<bool> _saveDay(String cityId, MyDay day) async {
+    final ids = {...myDayFor(cityId).placeIds, ...day.placeIds}
+      ..removeWhere((name, id) => !day.stops.contains(name));
+    _dayPicks[cityId] = MyDay(
+        stops: day.stops,
+        hotel: day.hotel,
+        restaurant: day.restaurant,
+        placeIds: ids);
+    _notify();
+    return _persist(
+        myDayKey, _dayPicks.map((id, day) => MapEntry(id, day.toJson())));
+  }
+
+  Future<bool> addToMyDay(String cityId, String name,
+      {String kind = 'outing', String? placeId}) async {
+    name = name.trim();
+    if (!_destinations.any((d) => d.id == cityId) ||
+        name.isEmpty ||
+        name.length > 500) return false;
+    final day = myDayFor(cityId);
+    if (kind == 'hotel')
+      return _saveDay(cityId,
+          MyDay(stops: day.stops, hotel: name, restaurant: day.restaurant));
+    if (kind == 'restaurant')
+      return _saveDay(
+          cityId, MyDay(stops: day.stops, hotel: day.hotel, restaurant: name));
+    final existing =
+        day.stops.where((p) => p.toLowerCase() == name.toLowerCase());
+    if (existing.isNotEmpty) {
+      if (placeId != null)
+        return _saveDay(
+            cityId,
+            MyDay(
+                stops: day.stops,
+                hotel: day.hotel,
+                restaurant: day.restaurant,
+                placeIds: {existing.first: placeId}));
+      return true;
+    }
+    if (day.stops.length >= 5) return false;
+    return _saveDay(
+        cityId,
+        MyDay(
+            placeIds: {if (placeId != null) name: placeId},
+            stops: [...day.stops, name],
+            hotel: day.hotel,
+            restaurant: day.restaurant));
+  }
+
+  Future<bool> removeFromMyDay(String cityId, String name,
+      {String kind = 'outing'}) {
+    final day = myDayFor(cityId);
+    return _saveDay(
+        cityId,
+        MyDay(
+            stops: kind == 'outing'
+                ? day.stops.where((p) => p != name).toList()
+                : day.stops,
+            hotel: kind == 'hotel' ? '' : day.hotel,
+            restaurant: kind == 'restaurant' ? '' : day.restaurant));
+  }
+
+  Future<bool> moveDayStop(String cityId, int index, int offset) async {
+    final day = myDayFor(cityId);
+    final target = index + offset;
+    if (index < 0 ||
+        index >= day.stops.length ||
+        target < 0 ||
+        target >= day.stops.length) return false;
+    final stops = List<String>.of(day.stops);
+    final item = stops.removeAt(index);
+    stops.insert(target, item);
+    return _saveDay(cityId,
+        MyDay(stops: stops, hotel: day.hotel, restaurant: day.restaurant));
   }
 
   Future<void> waitForWrites() => _writes;

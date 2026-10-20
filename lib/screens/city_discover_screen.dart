@@ -8,6 +8,7 @@ import '../widgets/destination_image.dart';
 import '../widgets/discovery_shortcuts.dart';
 import '../widgets/travel_link_button.dart';
 import 'day_planner_screen.dart';
+import '../widgets/my_day_actions.dart';
 import 'explorer_screen.dart';
 
 class CityDiscoverScreen extends StatefulWidget {
@@ -81,6 +82,9 @@ class _CityDiscoverScreenState extends State<CityDiscoverScreen> {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    MyDayActions(
+                        destination: _city, controller: widget.controller),
+                    const SizedBox(height: 16),
                     ClipRRect(
                         borderRadius: BorderRadius.circular(28),
                         child: SizedBox(
@@ -299,14 +303,13 @@ class _CityDiscoverScreenState extends State<CityDiscoverScreen> {
                     icon: Icons.location_on_outlined,
                     url: mapSearch(
                         '${place.name}, ${place.area}, ${_city.name}, ${_city.country}')),
-                FilledButton.tonalIcon(
-                    onPressed: () => _plan(place: place),
-                    icon: const Icon(Icons.add),
-                    label: Text(_kind == 'hotel'
-                        ? 'Use this stay'
-                        : _kind == 'restaurant'
-                            ? 'Use for my meal'
-                            : 'Make this my main outing')),
+                MyDayActions(
+                    destination: _city,
+                    controller: widget.controller,
+                    name: place.name,
+                    placeId: place.id,
+                    showReview: false,
+                    kind: place.kind),
               ]),
             ])),
       ]));

@@ -86,3 +86,12 @@ Code analysis completed with no errors or warnings; it reported 52 informational
 Search-only-tab and animated icon update: all 20 Flutter tests passed, including the new check that city search appears only in Search and does not filter Home. Phone layout at enlarged text passed.
 
 City-guide polish: all 20 tests pass after the redesigned guide, persistent planning and place-information controls, and shared contrast/button sizing changes. Phone tests include enlarged text. Remaining product proposals are documented separately from implemented features in CITY_FIRST_AND_LOGIN.md.
+
+## My day — 20 October 2026
+The previous version was committed and pushed first as 79b3180. My day was then implemented locally. All 25 Flutter tests pass, and the release web build succeeds. Browser checks confirmed adding two guide sights, synchronized pick counts, reordering, planner handoff, reload persistence and reopening through Hotlists. Only the two newly created verification picks were removed afterwards; existing trip drafts were retained.
+
+
+## City-first and venue picker refinements — 20 October 2026
+All 28 Flutter tests pass. New checks cover disabled activities before city choice, city-scoped picker filtering using bundled data, stable pick ID storage/attachment/removal, and the five-stop limit message. Existing phone-large-text, login-adapter compilation, planner, draft compatibility and persistence checks remain applicable. External road times and missing coordinates are not fabricated. No Android device fresh-install test was performed.
+
+Browser check confirmed Home initially has no activity selection and disables activity controls, then choosing Goa enables them and displays Explore Goa. The final preview navigation stalled, so the rest of the updated picker validation relies on automated widget tests. The new city-first Home screenshot has been saved. Android fresh-install testing remains unperformed.

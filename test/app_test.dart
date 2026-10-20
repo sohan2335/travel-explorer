@@ -4,6 +4,9 @@ import 'package:travel_explorer/services/local_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travel_explorer/main.dart';
 import 'package:travel_explorer/screens/explorer_screen.dart';
+import 'package:travel_explorer/screens/my_day_screen.dart';
+import 'package:travel_explorer/state/travel_controller.dart';
+import 'package:travel_explorer/data/destinations.dart';
 import 'package:travel_explorer/screens/day_planner_screen.dart';
 
 // Photos are bundled assets, so tests do not need internet access.
@@ -26,6 +29,9 @@ void main() {
     await showApp(tester);
     await tester.ensureVisible(find.text('Goa').first);
     await tester.tap(find.text('Goa').first);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Explore Goa'));
+    await tester.tap(find.text('Explore Goa'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Sights & city guide'));
     await tester.tap(find.text('Sights & city guide'));
@@ -64,6 +70,9 @@ void main() {
     await tester.ensureVisible(find.text('Goa').first);
     await tester.tap(find.text('Goa').first);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Explore Goa'));
+    await tester.tap(find.text('Explore Goa'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Sights & city guide'));
     await tester.tap(find.text('Sights & city guide'));
     await tester.pumpAndSettle();
@@ -89,7 +98,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Close city'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Hotlists'));
+    await tester.tap(find.text('Saved'));
     await tester.pump();
     expect(find.text('1 saved places'), findsOneWidget);
     expect(find.text('Goa'), findsOneWidget);
@@ -97,8 +106,80 @@ void main() {
     await tester.tap(saveButton('Remove Goa'));
     await tester.pump();
     expect(find.text('0 saved places'), findsOneWidget);
-    expect(find.text('Your wishlist is waiting'), findsOneWidget);
+    expect(find.text('No saved cities yet'), findsOneWidget);
     expect(find.text('Goa'), findsNothing);
+  });
+
+  testWidgets('My day hands ordered picks to planner without saving a draft',
+      (tester) async {
+    final c = TravelController(destinations, store: MemoryStore());
+    await c.addToMyDay('goa', 'Fort Aguada');
+    await c.addToMyDay('goa', 'Fontainhas');
+    await c.addToMyDay('goa', 'Sample hotel', kind: 'hotel');
+    await tester.pumpWidget(MaterialApp(
+        home: MyDayScreen(
+            destination: destinations.firstWhere((d) => d.id == 'goa'),
+            controller: c)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Plan my day'));
+    await tester.pumpAndSettle();
+    final planner =
+        tester.widget<DayPlannerScreen>(find.byType(DayPlannerScreen));
+    expect(planner.initialStops, ['Fort Aguada', 'Fontainhas']);
+    expect(planner.initialHotel, 'Sample hotel');
+    expect(find.widgetWithText(TextFormField, 'Sample hotel'), findsOneWidget);
+    expect(c.drafts, isEmpty);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
+
+  testWidgets('city place picker searches local data and keeps source ID',
+      (tester) async {
+    await tester.runAsync(() => PlaceCatalog.load(offline: true));
+    final c = TravelController(destinations, store: MemoryStore());
+    await tester.pumpWidget(MaterialApp(
+        home: MyDayScreen(
+            destination: destinations.firstWhere((d) => d.id == 'goa'),
+            controller: c)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Add to My day'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Search places in this city'), 'Fort');
+    await tester.pumpAndSettle();
+    expect(find.text('Charminar'), findsNothing);
+    await tester.tap(find.text('Fort Aguada'));
+    await tester.pumpAndSettle();
+    expect(c.myDayFor('goa').stops, ['Fort Aguada']);
+    expect(c.myDayFor('goa').placeIds['Fort Aguada'], 'goa:sight:Fort Aguada');
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
+
+  testWidgets('My day shows the five-stop limit and disables adding',
+      (tester) async {
+    final c = TravelController(destinations);
+    for (var i = 0; i < 5; i++) {
+      await c.addToMyDay('goa', 'Stop $i');
+    }
+    await tester.pumpWidget(MaterialApp(
+        home: MyDayScreen(
+            destination: destinations.firstWhere((d) => d.id == 'goa'),
+            controller: c)));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+        find.text('Limit reached. Remove a stop to add another.'), 400,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.text('Limit reached. Remove a stop to add another.'),
+        findsOneWidget);
+    expect(
+        tester
+            .widget<OutlinedButton>(
+                find.widgetWithText(OutlinedButton, 'Add to My day'))
+            .onPressed,
+        isNull);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
   });
 
   testWidgets('city search lives only in Search and does not filter Home',
@@ -117,14 +198,16 @@ void main() {
     expect(find.text('10 cities to explore'), findsOneWidget);
   });
 
-  testWidgets('activity selection opens that category for a city',
+  testWidgets('a city must be chosen before activities are enabled',
       (tester) async {
     await showApp(tester);
-    expect(find.widgetWithText(ChoiceChip, 'Beaches'), findsNothing);
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Shopping'));
-    await tester.pump();
-    await tester.ensureVisible(find.text('Goa').first);
+    final tile = find.widgetWithText(OutlinedButton, 'Shopping');
+    expect(tester.widget<OutlinedButton>(tile).onPressed, isNull);
     await tester.tap(find.text('Goa').first);
+    await tester.pumpAndSettle();
+    expect(tester.widget<OutlinedButton>(tile).onPressed, isNotNull);
+    await tester.ensureVisible(tile);
+    await tester.tap(tile);
     await tester.pumpAndSettle();
     expect(find.text('Shopping in Goa'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -149,6 +232,9 @@ void main() {
     await tester.ensureVisible(find.text('Goa').first);
     await tester.tap(find.text('Goa').first);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Explore Goa'));
+    await tester.tap(find.text('Explore Goa'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Sights & city guide'));
     await tester.tap(find.text('Sights & city guide'));
     await tester.pumpAndSettle();
@@ -162,9 +248,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Close city'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Hotlists'));
+    await tester.tap(find.text('Saved'));
     await tester.pump();
-    expect(find.text('Your wishlist is waiting'), findsOneWidget);
+    expect(find.text('No saved cities yet'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -9,6 +9,8 @@ import 'place_information.dart';
 import 'day_planner_screen.dart';
 import 'city_discover_screen.dart';
 import 'profile_screen.dart';
+import '../widgets/my_day_actions.dart';
+import 'my_day_screen.dart';
 import '../widgets/discovery_shortcuts.dart';
 
 class ExplorerScreen extends StatefulWidget {
@@ -22,7 +24,9 @@ class ExplorerScreen extends StatefulWidget {
 
 class _ExplorerScreenState extends State<ExplorerScreen> {
   int _tab = 0;
-  String _activity = 'restaurant';
+  String? _activity;
+  Destination? _chosenCity;
+  final _cityScroll = ScrollController();
   final _searchFocus = FocusNode();
   late final TextEditingController _search;
 
@@ -44,6 +48,7 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
 
   @override
   void dispose() {
+    _cityScroll.dispose();
     _searchFocus.dispose();
     _search.dispose();
     super.dispose();
@@ -121,7 +126,7 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                       const SizedBox(height: 14),
                                       Text(
                                           saved
-                                              ? 'Places worth keeping.'
+                                              ? 'Saved'
                                               : _tab == 1
                                                   ? 'Find your next city.'
                                                   : 'Go somewhere.\nMake a day of it.',
@@ -148,6 +153,27 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                                 controller.storageMessage!)),
                                       if (saved) ...[
                                         const SizedBox(height: 16),
+                                        for (final cityId
+                                            in controller.pickedCities)
+                                          ListTile(
+                                              leading: const Icon(
+                                                  Icons.playlist_add_check),
+                                              title: Text(
+                                                  'My day in ${destinations.firstWhere((d) => d.id == cityId).name}'),
+                                              subtitle: Text(
+                                                  '${controller.myDayFor(cityId).count} picks'),
+                                              trailing: const Icon(
+                                                  Icons.arrow_forward),
+                                              onTap: () => Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (_) => MyDayScreen(
+                                                          destination: destinations
+                                                              .firstWhere((d) =>
+                                                                  d.id ==
+                                                                  cityId),
+                                                          controller:
+                                                              controller)))),
                                         const Text('Saved trip drafts',
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold)),
@@ -215,7 +241,151 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                           const SizedBox(height: 16),
                                         ],
                                         if (_tab == 0) ...[
-                                          Text('What would you like to do?',
+                                          Text('Choose a city',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleLarge),
+                                          Row(children: [
+                                            const Expanded(
+                                                child: Text(
+                                                    'Swipe through cities or use the arrows.')),
+                                            IconButton(
+                                                tooltip: 'Previous cities',
+                                                onPressed: () =>
+                                                    _cityScroll.animateTo(
+                                                        (_cityScroll
+                                                                    .offset -
+                                                                300)
+                                                            .clamp(
+                                                                0.0,
+                                                                _cityScroll
+                                                                    .position
+                                                                    .maxScrollExtent),
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    250),
+                                                        curve: Curves.easeOut),
+                                                icon: const Icon(
+                                                    Icons.chevron_left)),
+                                            IconButton(
+                                                tooltip: 'More cities',
+                                                onPressed: () =>
+                                                    _cityScroll.animateTo(
+                                                        (_cityScroll
+                                                                    .offset +
+                                                                300)
+                                                            .clamp(
+                                                                0.0,
+                                                                _cityScroll
+                                                                    .position
+                                                                    .maxScrollExtent),
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    250),
+                                                        curve: Curves.easeOut),
+                                                icon: const Icon(
+                                                    Icons.chevron_right))
+                                          ]),
+                                          SizedBox(
+                                              height: 150 +
+                                                  MediaQuery.textScalerOf(
+                                                          context)
+                                                      .scale(12),
+                                              child: ListView.separated(
+                                                  controller: _cityScroll,
+                                                  scrollDirection:
+                                                      Axis.horizontal,
+                                                  itemCount:
+                                                      destinations.length,
+                                                  separatorBuilder: (_, __) =>
+                                                      const SizedBox(width: 12),
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final city =
+                                                        destinations[index];
+                                                    return SizedBox(
+                                                        width: 160,
+                                                        child: Semantics(
+                                                            onTap: () =>
+                                                                setState(() {
+                                                                  _chosenCity =
+                                                                      city;
+                                                                  _activity =
+                                                                      null;
+                                                                }),
+                                                            button: true,
+                                                            selected: _chosenCity?.id ==
+                                                                city.id,
+                                                            label:
+                                                                'Choose ${city.name}',
+                                                            child: Card(
+                                                                clipBehavior: Clip
+                                                                    .antiAlias,
+                                                                shape: RoundedRectangleBorder(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            20),
+                                                                    side: BorderSide(
+                                                                        color: _chosenCity?.id == city.id
+                                                                            ? Theme.of(context)
+                                                                                .colorScheme
+                                                                                .primary
+                                                                            : const Color(
+                                                                                0xFF333338),
+                                                                        width:
+                                                                            2)),
+                                                                child: InkWell(
+                                                                    onTap: () =>
+                                                                        setState(
+                                                                            () {
+                                                                          _chosenCity =
+                                                                              city;
+                                                                          _activity =
+                                                                              null;
+                                                                        }),
+                                                                    child: Stack(
+                                                                        fit: StackFit
+                                                                            .expand,
+                                                                        children: [
+                                                                          DestinationImage(
+                                                                              url: city.imageUrl,
+                                                                              label: city.name),
+                                                                          const DecoratedBox(
+                                                                              decoration: BoxDecoration(
+                                                                                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
+                                                                            Colors.transparent,
+                                                                            Color(0xF008090B)
+                                                                          ]))),
+                                                                          Positioned(
+                                                                              left: 12,
+                                                                              right: 12,
+                                                                              bottom: 12,
+                                                                              child: Text(city.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)))
+                                                                        ])))));
+                                                  })),
+                                          const SizedBox(height: 16),
+                                          if (_chosenCity != null)
+                                            OutlinedButton.icon(
+                                                onPressed: () => Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            CityDiscoverScreen(
+                                                                destination:
+                                                                    _chosenCity!,
+                                                                controller:
+                                                                    controller))),
+                                                icon: const Icon(
+                                                    Icons.explore_outlined),
+                                                label: Text(
+                                                    'Explore ${_chosenCity!.name}')),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                              _chosenCity == null
+                                                  ? 'Choose a city to unlock activities'
+                                                  : 'What would you like to do in ${_chosenCity!.name}?',
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .titleMedium),
@@ -223,11 +393,22 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                           DiscoveryShortcuts(
                                               selected: _activity,
                                               includePlan: false,
-                                              onSelected: (kind) => setState(
-                                                  () => _activity = kind)),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                              'Now choose a city to explore ${discoveryLabels[_activity]!.toLowerCase()}.'),
+                                              enabled: _chosenCity != null,
+                                              onSelected: (kind) {
+                                                setState(
+                                                    () => _activity = kind);
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            CityDiscoverScreen(
+                                                                destination:
+                                                                    _chosenCity!,
+                                                                controller:
+                                                                    controller,
+                                                                initialKind:
+                                                                    kind)));
+                                              }),
                                         ],
                                       ],
                                       const SizedBox(height: 20),
@@ -257,7 +438,7 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                         const SizedBox(height: 16),
                                         Text(
                                             saved
-                                                ? 'Your wishlist is waiting'
+                                                ? 'No saved cities yet'
                                                 : 'No destinations found',
                                             style: Theme.of(context)
                                                 .textTheme
@@ -274,13 +455,8 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                   ),
                                 )
                               else if (_tab == 0)
-                                SliverToBoxAdapter(
-                                    child: _CityCarousel(
-                                        initialKind: _activity,
-                                        key: ValueKey(
-                                            items.map((p) => p.id).join(',')),
-                                        items: items,
-                                        controller: controller))
+                                const SliverToBoxAdapter(
+                                    child: SizedBox(height: 24))
                               else
                                 SliverPadding(
                                   padding:
@@ -307,13 +483,13 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                               if (column > 0)
                                                 const SizedBox(width: 16),
                                               Expanded(
-                                                  child: row *
-                                                                  columns +
+                                                  child: row * columns +
                                                               column <
                                                           items.length
                                                       ? _DestinationCard(
                                                           initialKind:
-                                                              _activity,
+                                                              _activity ??
+                                                                  'restaurant',
                                                           destination: items[
                                                               row * columns +
                                                                   column],
@@ -370,7 +546,7 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                   NavigationDestination(
                                       icon: Icon(Icons.bookmark_outline),
                                       selectedIcon: Icon(Icons.bookmark),
-                                      label: 'Hotlists'),
+                                      label: 'Saved'),
                                   NavigationDestination(
                                       icon: Icon(Icons.search), label: 'Search')
                                 ],
@@ -639,7 +815,8 @@ class DestinationDetails extends StatelessWidget {
                                           OutlinedButton.icon(
                                               onPressed: () =>
                                                   showPlaceInformation(
-                                                      context, destination),
+                                                      context, destination,
+                                                      controller: controller),
                                               icon: const Icon(
                                                   Icons.info_outline),
                                               label: const Text(
@@ -698,6 +875,10 @@ class DestinationDetails extends StatelessWidget {
                                                       ]))
                                                 ]))),
                                     const SizedBox(height: 24),
+                                    MyDayActions(
+                                        destination: destination,
+                                        controller: controller),
+                                    const SizedBox(height: 20),
                                     Text('Top attractions',
                                         style: Theme.of(context)
                                             .textTheme
@@ -732,7 +913,9 @@ class DestinationDetails extends StatelessWidget {
                                                                     context,
                                                                     destination,
                                                                     attraction:
-                                                                        attraction),
+                                                                        attraction,
+                                                                    controller:
+                                                                        controller),
                                                                 child: SizedBox(
                                                                     height: 180,
                                                                     child: DestinationImage(
@@ -767,13 +950,19 @@ class DestinationDetails extends StatelessWidget {
                                                                               8,
                                                                           children: [
                                                                             OutlinedButton.icon(
-                                                                                onPressed: () => showPlaceInformation(context, destination, attraction: attraction),
+                                                                                onPressed: () => showPlaceInformation(context, destination, attraction: attraction, controller: controller),
                                                                                 icon: const Icon(Icons.menu_book_outlined, size: 18),
                                                                                 label: const Text('View guide')),
                                                                             FilledButton.tonalIcon(
                                                                                 onPressed: () => _plan(context, attraction: attraction.name),
                                                                                 icon: const Icon(Icons.add_location_alt_outlined, size: 18),
                                                                                 label: const Text('Plan a visit')),
+                                                                            MyDayActions(
+                                                                                destination: destination,
+                                                                                controller: controller,
+                                                                                name: attraction.name,
+                                                                                placeId: '${destination.id}:sight:${attraction.name}',
+                                                                                showReview: false),
                                                                           ]),
                                                                     ])),
                                                           ])))
@@ -786,71 +975,4 @@ class DestinationDetails extends StatelessWidget {
                                   ]))))),
             ));
   }
-}
-
-/// PageView handles swipes; arrow buttons make the same action easy on desktop.
-class _CityCarousel extends StatefulWidget {
-  const _CityCarousel(
-      {super.key,
-      required this.items,
-      required this.controller,
-      required this.initialKind});
-  final String initialKind;
-  final List<Destination> items;
-  final TravelController controller;
-  @override
-  State<_CityCarousel> createState() => _CityCarouselState();
-}
-
-class _CityCarouselState extends State<_CityCarousel> {
-  final _pages = PageController(viewportFraction: .90);
-  int _index = 0;
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
-
-  void _move(int page) => _pages.animateToPage(page,
-      duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
-  @override
-  Widget build(BuildContext context) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text('Pick your next city',
-                style: Theme.of(context).textTheme.titleLarge)),
-        const Padding(
-            padding: EdgeInsets.fromLTRB(20, 6, 20, 16),
-            child: Text(
-                'Swipe to explore. Tap a photo for food, stays and things to do.')),
-        SizedBox(
-            height: 260 + MediaQuery.textScalerOf(context).scale(105),
-            child: PageView.builder(
-              controller: _pages,
-              itemCount: widget.items.length,
-              onPageChanged: (page) => setState(() => _index = page),
-              itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 7),
-                  child: _DestinationCard(
-                      destination: widget.items[index],
-                      initialKind: widget.initialKind,
-                      controller: widget.controller)),
-            )),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          IconButton(
-              tooltip: 'Previous city',
-              onPressed: _index == 0 ? null : () => _move(_index - 1),
-              icon: const Icon(Icons.arrow_back)),
-          Text('${_index + 1} / ${widget.items.length}',
-              semanticsLabel: 'City ${_index + 1} of ${widget.items.length}'),
-          IconButton(
-              tooltip: 'Next city',
-              onPressed: _index == widget.items.length - 1
-                  ? null
-                  : () => _move(_index + 1),
-              icon: const Icon(Icons.arrow_forward)),
-        ]),
-        const SizedBox(height: 20),
-      ]);
 }

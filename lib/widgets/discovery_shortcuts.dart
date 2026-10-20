@@ -43,10 +43,12 @@ class DiscoveryShortcuts extends StatelessWidget {
       {super.key,
       required this.onSelected,
       this.selected,
-      this.includePlan = true});
+      this.includePlan = true,
+      this.enabled = true});
   final ValueChanged<String> onSelected;
   final String? selected;
   final bool includePlan;
+  final bool enabled;
   @override
   Widget build(BuildContext context) =>
       LayoutBuilder(builder: (context, constraints) {
@@ -60,14 +62,14 @@ class DiscoveryShortcuts extends StatelessWidget {
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.all(8),
-                      backgroundColor: discoveryColors[kind]!
-                          .withValues(alpha: selected == kind ? .2 : .07),
+                      backgroundColor: discoveryColors[kind]!.withValues(
+                          alpha: enabled ? (selected == kind ? .2 : .07) : .02),
                       side: BorderSide(
                           color: discoveryColors[kind]!
                               .withValues(alpha: selected == kind ? 1 : .2)),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20))),
-                  onPressed: () => onSelected(kind),
+                  onPressed: enabled ? () => onSelected(kind) : null,
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -119,7 +121,12 @@ class DiscoveryShortcuts extends StatelessWidget {
                         Text(discoveryLabels[kind] ?? 'Day plan',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: discoveryColors[kind], fontSize: 12)),
+                                color: enabled
+                                    ? discoveryColors[kind]
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                fontSize: 12)),
                       ]),
                 )),
         ]);
