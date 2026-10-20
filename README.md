@@ -11,7 +11,7 @@ A small Flutter app for the GDGC VNRVJIET App Development volunteer recruitment 
 - Clickable destination/attraction names open background and surroundings links.
 - Nearby hotel searches, public transport/cab/walk/bicycle directions, Uber access, and bicycle-rental searches.
 - An editable one-day timetable: arrival, hotel arrangements, rest, up to five outings, meal, and return; copy the outline to keep it.
-- A Saved screen with saved cities and trip drafts, plus Home and Search in a floating bottom bar.
+- A Saved screen with saved cities and trip drafts, plus Home, Search and My day in a floating bottom bar.
 - Video-inspired discovery UI: near-black backgrounds, charcoal surfaces, colourful category tiles, large city photos and source-linked place cards.
 - Stays, Dining, Activities, Water parks and Shopping for every city, with a public Neon directory and citywide Maps searches.
 - Use a directory stay, restaurant or outing in the planner; customise the visit duration and save the draft.
@@ -115,9 +115,31 @@ Collect outings, a stay and a meal while browsing each city. Reorder your picks 
 ## Latest navigation and My day refinements
 Home asks you to choose a city first, and starts with no activity selected. Activities stay disabled until a city is chosen. The saved-content tab is now named **Saved**.
 
-My day has a short introduction with details behind its info button. **Add to My day** opens a searchable picker limited to the current city, combining bundled sights and the Neon directory (with its offline fallback). Picks retain their directory or local sight ID. **Add a custom stop** remains an explicit fallback, labelled as an unverified location. The app provides per-stop Maps links and route-check links between consecutive outings. At five outings, it disables adding and explains how to make room.
+My day has a short introduction with details behind its info button. **Add to my day** opens a searchable picker limited to the current city, combining bundled sights and the Neon directory (with its offline fallback). Picks retain their directory or local sight ID. **Add a custom stop** remains an explicit fallback, labelled as an unverified location. The app provides per-stop Maps links and route-check links between consecutive outings. At five outings, it disables adding and explains how to make room.
 
 The current place catalog does not include verified coordinates. No straight-line-distance or road-time warning is generated from these names. Maps resolves the selected names and city; check the resolved locations and routes there.
 
 ## Security design decision
 Flutter calls Neon's HTTPS Auth and Data APIs. It requests a short-lived anonymous guest token to read the public venue directory. The database restricts that guest role to read-only access using row-level security. No Postgres connection string, database password, Google client secret or administrator API key is embedded in the app. User sessions use browser-managed HTTP-only cookies. Saved cities, My day and trip drafts remain device-local, so logging in does not imply account sync.
+
+
+## UI decisions
+
+![Refreshed dark Home](docs/screenshots/ui-refresh-home-mobile.jpg)
+
+![Refreshed city guide](docs/screenshots/ui-refresh-guide.jpg)
+
+- Keep the original dark surfaces and purple/category accents for a consistent identity.
+- Choose a city before activities so every result has a clear city context.
+- Tap a large photo to select a city; use its arrow for the city guide and its heart to save.
+- Use Poppins headings and Lato body text, bundled locally so fonts work offline.
+- Use dark image gradients, rounded 24-pixel cards, readable text and 48-pixel controls.
+- Put Home, Saved, Search and My day in a floating bar so each is one tap away.
+- Keep My day explanations behind an info button and make the five-outing limit explicit.
+- Use the current-city venue picker with source IDs; custom stops remain clearly unverified.
+- Open Maps for route checks because the directory has no verified coordinates or road-time data.
+- Show named image placeholders; cached_network_image does not provide persistent image caching on web.
+
+UI refresh verification, changed files, limitations and the interview walkthrough: [UI refresh report](docs/UI_REFRESH_REPORT.md).
+
+Font support needs Flutter 3.35+ / Dart 3.9+. Keep `pubspec.lock` when installing this app. The lock selects a compatible Apple path-provider implementation to avoid a Windows native-assets build failure with space-containing SDK paths; no extra direct package was added.

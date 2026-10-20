@@ -3,10 +3,12 @@ description: A beginner-friendly Flutter travel discovery app for GDGC recruitme
 publish_to: none
 version: 1.0.0+1
 environment:
-  sdk: '>=3.6.0 <4.0.0'
+  sdk: '>=3.9.0 <4.0.0'
 dependencies:
+  cached_network_image: 3.4.1
   flutter:
     sdk: flutter
+  google_fonts: 8.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -16,3 +18,4 @@ flutter:
   assets:
     - assets/images/
     - assets/data/
+    - assets/fonts/

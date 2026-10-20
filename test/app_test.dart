@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:travel_explorer/widgets/city_venue_picker.dart';
+import 'package:travel_explorer/widgets/destination_image.dart';
 import 'package:travel_explorer/services/place_catalog.dart';
 import 'package:travel_explorer/services/local_store.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +26,27 @@ Future<void> showApp(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('My day tab opens a city without requiring a saved draft',
+      (tester) async {
+    await showApp(tester);
+    await tester.tap(find.text('My day'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('My day in Goa'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MyDayScreen), findsOneWidget);
+    expect(find.text('Order your stops, then check timing.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('missing photo shows a named placeholder', (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+        home: SizedBox(
+            height: 320, child: DestinationImage(url: '', label: 'Goa'))));
+    expect(find.text('Goa'), findsOneWidget);
+    expect(find.byIcon(Icons.landscape_outlined), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('place information and a simple day plan are reachable',
       (tester) async {
     await showApp(tester);
