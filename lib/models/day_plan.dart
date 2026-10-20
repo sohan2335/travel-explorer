@@ -29,6 +29,7 @@ List<DayPlanStop> buildDayPlan({
   required int restMinutes,
   required int travelMinutes,
   int hotelReadyMinutes = 0,
+  bool includeArrival = true,
   String pace = 'Balanced',
   String mealPlace = '',
   int? visitMinutesOverride,
@@ -68,19 +69,19 @@ List<DayPlanStop> buildDayPlan({
   // Arrival 30 + hotel 30 + meal 60 = 120, plus the visit, rest and transfers.
   final hotelArrival = arrivalMinutes + 30 + travelMinutes;
   final waitingMinutes =
-      hotelReadyMinutes > hotelArrival ? hotelReadyMinutes - hotelArrival : 0;
+      includeArrival && hotelReadyMinutes > hotelArrival ? hotelReadyMinutes - hotelArrival : 0;
   final mealTransfer = mealPlace.trim().isEmpty ? 0 : travelMinutes;
   final end = arrivalMinutes +
       additionalPlaces.length * (travelMinutes + visitMinutes) +
       mealTransfer +
-      120 +
+      (includeArrival ? 120 : 60) +
       visitMinutes +
       restMinutes +
-      3 * travelMinutes +
+      (includeArrival ? 3 : 2) * travelMinutes +
       waitingMinutes;
   if (end > 1440) {
     throw ArgumentError(
-        'This plan would go past midnight. Choose an earlier arrival or shorter rest/travel buffers.');
+        includeArrival ? 'This plan would go past midnight. Choose an earlier arrival or shorter rest/travel buffers.' : 'This plan would go past midnight. Choose an earlier start time or shorter breaks and transfer buffers.');
   }
   var time = arrivalMinutes;
   final stops = <DayPlanStop>[];
@@ -91,6 +92,7 @@ List<DayPlanStop> buildDayPlan({
     time += duration;
   }
 
+  if (includeArrival) {
   add(30, 'Arrive & settle in',
       'Allow time for arrival formalities at $origin.');
   add(travelMinutes, 'Travel to your hotel',
@@ -102,9 +104,10 @@ List<DayPlanStop> buildDayPlan({
   }
   add(30, 'Check in or arrange luggage drop',
       'Confirm check-in time and luggage arrangements with $hotel.');
+  }
   if (restMinutes > 0)
-    add(restMinutes, 'Rest & refresh',
-        'Rest at your accommodation if access is available.');
+    add(restMinutes, includeArrival ? 'Rest & refresh' : 'Take a break',
+        includeArrival ? 'Rest at your accommodation if access is available.' : 'Your optional break before exploring.');
   add(travelMinutes, 'Travel to your attraction',
       'Use directions to check travel time and the available modes.',
       from: hotel, to: attraction);
@@ -130,7 +133,7 @@ List<DayPlanStop> buildDayPlan({
       mealPlace.trim().isEmpty
           ? 'Choose a suitable meal stop close to the attraction.'
           : 'Meal stop: ${mealPlace.trim()}. Check the route from $lastPlace and allow extra transfer time if needed.');
-  add(travelMinutes, 'Return to your hotel',
+  add(travelMinutes, includeArrival ? 'Return to your hotel' : 'Return to starting point',
       'Check the return route and last public-transport service.',
       from: mealPlace.trim().isEmpty ? lastPlace : mealPlace.trim(), to: hotel);
   return List.unmodifiable(stops);

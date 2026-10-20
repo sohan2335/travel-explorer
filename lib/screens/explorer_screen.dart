@@ -9,6 +9,7 @@ import '../widgets/destination_image.dart';
 import '../widgets/travel_tools.dart';
 import 'place_information.dart';
 import 'day_planner_screen.dart';
+import 'whole_trip_screen.dart';
 import 'city_discover_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/my_day_actions.dart';
@@ -542,6 +543,11 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
         const Text(
             'Choose a city to review your stops or continue a saved plan.'),
         const SizedBox(height: 24),
+        Card(child: ListTile(leading: const Icon(Icons.luggage_outlined),
+          title: const Text('Whole trip plans'), subtitle: const Text('Build or resume a multi-day city trip'),
+          trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => WholeTripsScreen(controller: widget.controller))))),
+        const SizedBox(height: 24),
         for (final city in destinations)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -818,7 +824,7 @@ class DestinationDetails extends StatelessWidget {
                                     onPressed: () => _plan(context),
                                     icon: const Icon(Icons.route),
                                     label:
-                                        const Text('Plan one day here'))))))),
+                                        const Text('Plan your visit'))))))),
             body: SafeArea(
                 child: Stack(children: [
               SingleChildScrollView(

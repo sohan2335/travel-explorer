@@ -10,7 +10,8 @@ A small Flutter app for the GDGC VNRVJIET App Development volunteer recruitment 
 - Case-insensitive city search and country filtering, plus activity choices for Dining, Shopping, Events, Stays, Adventure parks and Water parks.
 - Clickable destination/attraction names open background and surroundings links.
 - Nearby hotel searches, public transport/cab/walk/bicycle directions, Uber access, and bicycle-rental searches.
-- An editable one-day timetable: arrival, hotel arrangements, rest, up to five outings, meal, and return; copy the outline to keep it.
+- An editable day timetable from an optional home, hotel or city starting point: up to five outings, breaks, a meal and return. No airport/station or check-in step is required.
+- Whole-trip planning for 2–7 days in one city: choose a start date, edit each day, save a whole-trip draft and copy the combined itinerary.
 - A Saved screen with saved cities and trip drafts, plus Home, Search and My day in a floating bottom bar.
 - Video-inspired discovery UI: near-black backgrounds, charcoal surfaces, colourful category tiles, large city photos and source-linked place cards.
 - Stays, Dining, Activities, Water parks and Shopping for every city, with a public Neon directory and citywide Maps searches.
@@ -62,7 +63,7 @@ The public place directory is connected to Neon on its Free plan, with a bundled
 
 Destination content combines curated samples with a few checked Hugging Face fields. See [data provenance and Kaggle status](docs/DATA_SOURCES.md). The original six destinations have offline photos; the four added cities load remote Commons photos. See [image credits](docs/IMAGE_CREDITS.md).
 
-The cloud directory has 24 curated listings across all ten cities; each city has a sourced stay and dining example, while Maps searches supplement less populated categories. Hotel and transport buttons open external searches; there are no live prices, ranked hotel recommendations, reservations, or guaranteed cheapest fares. Availability varies by location. The day planner adds user-chosen time buffers and waits for the room-access time entered by the traveller; it does not optimise routes or fetch hotel/attraction opening times. It rejects plans that extend past midnight. Unsaved edits are lost when you leave; saved inputs restore from My trips or Wishlist.
+The cloud directory has 24 curated listings across all ten cities; each city has a sourced stay and dining example, while Maps searches supplement less populated categories. Hotel and transport buttons open external searches; there are no live prices, ranked hotel recommendations, reservations, or guaranteed cheapest fares. Availability varies by location. The day planner uses an optional starting/return location and user-chosen transfer buffers. It does not include airport formalities or hotel check-in, optimise routes, or fetch hotel/attraction opening times. It rejects plans that extend past midnight. Unsaved edits are lost when you leave; saved day inputs restore from My day or Saved. Whole-trip drafts resume from My day → Whole trip plans.
 
 External links work through a small web helper and an Android platform bridge. Android still needs a device test; unsupported platforms offer a copyable URL. No extra package download is required.
 
@@ -164,3 +165,16 @@ The three bundled onboarding JPEGs are each under 300 KB. Native splash configur
 Verified with 50 automated tests, the web release build and mobile browser checks. [Detailed checks, limitations, changed files and an interview explanation](docs/ONBOARDING_REPORT.md).
 
 ![Mobile introduction](docs/screenshots/onboarding-mobile.jpg)
+
+
+## Plan a day or plan whole trip
+
+Open **Plan your visit** from a city guide. The two mode cards match the existing dark mobile design:
+
+- **Plan a day:** start wherever you are. The starting/return location is optional and defaults to the city centre; enter an exact place for better Maps directions. Choose start time, outings, a meal, pace and transfer/break buffers. There are no airport/station or room-access fields.
+- **Plan whole trip:** choose 2–7 days and a start date for the selected city. Use **Edit day** to create each timetable, then **Save this day**. **Save whole trip** also saves date and day-count changes. **Copy whole trip** includes each date and saved timetable, marking unfinished days clearly.
+- Resume saved trips from **My day → Whole trip plans**. One whole-trip draft is kept per city on this device, in a separate storage key. Existing one-day drafts stay separate. Whole trips currently cover one city each; intercity transfers and booking are not included.
+
+The local day builder skips arrival/check-in blocks. Legacy helper calls retain their old default for compatibility, while the app uses the new local-day mode. Existing draft fields still load; the timetable is rebuilt using the new flow.
+
+Verified with **58 tests**, a web build and the core planner checks. [Implementation, limits and verification](docs/PLANNING_MODES.md).

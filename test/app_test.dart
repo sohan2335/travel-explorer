@@ -75,17 +75,14 @@ void main() {
     expect(find.text('View surroundings'), findsOneWidget);
     await tester.tap(find.byTooltip('Close place information'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Plan one day here'));
+    await tester.ensureVisible(find.text('Plan your visit'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Plan one day here'));
+    await tester.tap(find.text('Plan your visit'));
     await tester.pumpAndSettle();
     expect(find.byType(DayPlannerScreen), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Arrival airport / station'), findsNothing);
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Arrival airport / station'),
-      'Station',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Hotel / luggage-drop location'),
+      find.widgetWithText(TextFormField, 'Start / return location (optional)'),
       'Hotel',
     );
     await tester.ensureVisible(find.text('Create my day plan'));
@@ -93,8 +90,9 @@ void main() {
     await tester.tap(find.text('Create my day plan'));
     await tester.pumpAndSettle();
     expect(find.text('Your day, at a glance'), findsOneWidget);
-    expect(find.text('Time before room access'), findsOneWidget);
-    expect(find.text('19:00 - 20:00'), findsOneWidget);
+    expect(find.text('Return to starting point'), findsOneWidget);
+    expect(find.text('Arrive & settle in'), findsNothing);
+    expect(find.text('12:30 - 13:30'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -8,6 +8,8 @@ import '../models/trip_draft.dart';
 import '../state/travel_controller.dart';
 import '../services/travel_links.dart';
 import '../widgets/travel_link_button.dart';
+import '../widgets/planner_mode_switch.dart';
+import 'whole_trip_screen.dart';
 
 class DayPlannerScreen extends StatefulWidget {
   const DayPlannerScreen(
@@ -18,12 +20,15 @@ class DayPlannerScreen extends StatefulWidget {
       this.initialHotel,
       this.initialAttraction,
       this.initialRestaurant,
-      this.initialVisitMinutes});
+      this.initialVisitMinutes, this.dayDraft, this.dayNumber, this.onSaveDay});
   final List<String>? initialStops;
   final Destination destination;
   final String? initialHotel, initialAttraction, initialRestaurant;
   final TravelController controller;
   final int? initialVisitMinutes;
+  final TripDraft? dayDraft;
+  final int? dayNumber;
+  final Future<bool> Function(TripDraft)? onSaveDay;
 
   @override
   State<DayPlannerScreen> createState() => _DayPlannerScreenState();
@@ -31,12 +36,10 @@ class DayPlannerScreen extends StatefulWidget {
 
 class _DayPlannerScreenState extends State<DayPlannerScreen> {
   final _form = GlobalKey<FormState>();
-  final _origin = TextEditingController();
   final _hotel = TextEditingController();
   final _restaurant = TextEditingController();
   TimeOfDay _arrival = const TimeOfDay(hour: 9, minute: 0);
-  TimeOfDay _hotelReady = const TimeOfDay(hour: 14, minute: 0);
-  int _rest = 60;
+  int _rest = 0;
   int _travel = 60;
   String _mode = 'transit';
   String _pace = 'Balanced';
@@ -51,7 +54,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
   void initState() {
     super.initState();
     _attraction = widget.destination.attractions.first.name;
-    final draft = widget.controller.draftFor(widget.destination.id);
+    final draft = widget.onSaveDay != null ? widget.dayDraft : widget.controller.draftFor(widget.destination.id);
     final style = context.getInheritedWidgetOfExactType<ExperienceScope>()?.controller.tripStyle;
     if (draft == null && style != null) {
       _pace = style;
@@ -59,14 +62,10 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
       _visit = visitMinutesByPace[style];
     }
     if (draft != null) {
-      _origin.text = draft.origin;
       _hotel.text = draft.hotel;
       _restaurant.text = draft.restaurant;
       _arrival = TimeOfDay(
           hour: draft.arrivalMinutes ~/ 60, minute: draft.arrivalMinutes % 60);
-      _hotelReady = TimeOfDay(
-          hour: draft.hotelReadyMinutes ~/ 60,
-          minute: draft.hotelReadyMinutes % 60);
       _rest = draft.restMinutes;
       _visit = draft.visitMinutes == 0 ? null : draft.visitMinutes;
       _travel = draft.travelMinutes;
@@ -107,18 +106,21 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     }
   }
 
+  String get _startingPoint => _hotel.text.trim().isEmpty ? '${widget.destination.name} city centre' : _hotel.text.trim();
+
   List<DayPlanStop> _calculatePlan() => buildDayPlan(
         arrivalMinutes: _arrival.hour * 60 + _arrival.minute,
-        origin: _origin.text.trim(),
-        hotel: _hotel.text.trim(),
+        origin: _startingPoint,
+        hotel: _startingPoint,
         attraction: _attraction,
         restMinutes: _rest,
         travelMinutes: _travel,
-        hotelReadyMinutes: _hotelReady.hour * 60 + _hotelReady.minute,
+        hotelReadyMinutes: 0,
         pace: _pace,
         mealPlace: _restaurant.text.trim(),
         visitMinutesOverride: _visit,
         additionalPlaces: _additionalPlaces,
+        includeArrival: false,
       );
 
   Future<void> _pickStops() async {
@@ -229,30 +231,33 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
   }
 
   Future<void> _saveDraft() async {
+    if (_saving) return;
     setState(() => _saving = true);
-    final success = await widget.controller.saveDraft(TripDraft(
+    final draft = TripDraft(
       destinationId: widget.destination.id,
-      origin: _origin.text.trim(),
-      hotel: _hotel.text.trim(),
+      origin: _startingPoint,
+      hotel: _startingPoint,
       restaurant: _restaurant.text.trim(),
       visitMinutes: _visit ?? 0,
       additionalPlaces: List.of(_additionalPlaces),
       arrivalMinutes: _arrival.hour * 60 + _arrival.minute,
-      hotelReadyMinutes: _hotelReady.hour * 60 + _hotelReady.minute,
+      hotelReadyMinutes: 0,
       restMinutes: _rest,
       travelMinutes: _travel,
       mode: _mode,
       attraction: _attraction,
       pace: _pace,
       hasPlan: _plan != null,
-    ));
+    );
+    final success = widget.onSaveDay != null
+      ? await widget.onSaveDay!(draft) : await widget.controller.saveDraft(draft);
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(
           content: Text(success
-              ? 'Trip draft saved on this device'
+              ? (widget.onSaveDay != null ? 'Day ${widget.dayNumber} saved in whole trip' : 'Trip draft saved on this device')
               : 'Could not save on this device. Copy the plan to keep it.')));
   }
 
@@ -289,7 +294,6 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
 
   @override
   void dispose() {
-    _origin.dispose();
     _hotel.dispose();
     _restaurant.dispose();
     super.dispose();
@@ -299,10 +303,6 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     _plan = null;
     _error = null;
   }
-
-  String? _required(String? value) => value == null || value.trim().isEmpty
-      ? 'Please enter a place name.'
-      : null;
 
   void _generate() {
     if (!_form.currentState!.validate()) return;
@@ -329,7 +329,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     final place = widget.destination;
     final city = '${place.name}, ${place.country}';
     return Scaffold(
-      appBar: AppBar(title: Text('One day in ${place.name}')),
+      appBar: AppBar(title: Text(widget.onSaveDay != null ? 'Day ${widget.dayNumber} · ${place.name}' : 'Plan in ${place.name}', overflow: TextOverflow.ellipsis)),
       body: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Center(
@@ -340,35 +340,30 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (widget.onSaveDay == null) ...[
+                          PlannerModeSwitch(onDay: () {}, onTrip: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => WholeTripScreen(destination: place,
+                              controller: widget.controller, fromDayPlanner: true)))),
+                          const SizedBox(height: 24),
+                        ],
                         Text('Make room for a little adventure.',
                             style: Theme.of(context).textTheme.headlineMedium),
                         const SizedBox(height: 12),
                         const Text(
-                            'Create an editable day plan with up to five outings. Times are your planning buffers, not live journey estimates. Save the draft to resume it on this device.'),
+                            'Start wherever you are and choose up to five outings. Leave the starting point blank to use the city centre. Times are editable buffers; check real routes in Maps.'),
                         if (widget.controller.storageMessage != null)
                           Padding(
                               padding: const EdgeInsets.only(top: 12),
                               child: Text(widget.controller.storageMessage!)),
                         const SizedBox(height: 24),
                         TextFormField(
-                            controller: _origin,
-                            maxLength: 500,
-                            validator: _required,
-                            onChanged: (_) => setState(_clearPlan),
-                            decoration: const InputDecoration(
-                                labelText: 'Arrival airport / station',
-                                hintText:
-                                    'Enter the specific airport or station')),
-                        const SizedBox(height: 12),
-                        TextFormField(
                             controller: _hotel,
                             maxLength: 500,
-                            validator: _required,
                             onChanged: (_) => setState(_clearPlan),
                             decoration: const InputDecoration(
-                                labelText: 'Hotel / luggage-drop location',
+                                labelText: 'Start / return location (optional)',
                                 hintText:
-                                    'Enter the hotel or a confirmed drop-off point')),
+                                    'Home, hotel or a place in the city')),
                         const SizedBox(height: 8),
                         TextFormField(
                             controller: _restaurant,
@@ -387,7 +382,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                         OutlinedButton.icon(
                             icon: const Icon(Icons.schedule),
                             label: Text(
-                                'Arrival time: ${clockTime(_arrival.hour * 60 + _arrival.minute)}'),
+                                'Start time: ${clockTime(_arrival.hour * 60 + _arrival.minute)}'),
                             onPressed: () async {
                               final time = await showTimePicker(
                                   context: context, initialTime: _arrival);
@@ -398,24 +393,6 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                 });
                               }
                             }),
-                        const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.hotel_outlined),
-                          label: Text(
-                              'Room available from: ${clockTime(_hotelReady.hour * 60 + _hotelReady.minute)}'),
-                          onPressed: () async {
-                            final time = await showTimePicker(
-                                context: context, initialTime: _hotelReady);
-                            if (time != null && mounted) {
-                              setState(() {
-                                _hotelReady = time;
-                                _clearPlan();
-                              });
-                            }
-                          },
-                        ),
-                        const Text(
-                            'Set the room-access time confirmed by your hotel. The plan waits until then before scheduling rest.'),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
                             initialValue: _attraction,
@@ -544,7 +521,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                             key: ValueKey('rest-$_rest'),
                             initialValue: _rest,
                             decoration:
-                                const InputDecoration(labelText: 'Rest time'),
+                                const InputDecoration(labelText: 'Break before exploring'),
                             items: const [0, 30, 60, 90, 120, 180]
                                 .map((minutes) => DropdownMenuItem(
                                     value: minutes,
@@ -592,8 +569,8 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                               onPressed: _saving ? null : _saveDraft,
                               icon: const Icon(Icons.save_outlined),
                               label: Text(
-                                  _saving ? 'Saving...' : 'Save trip draft')),
-                          if (widget.controller.draftFor(place.id) != null)
+                                  _saving ? 'Saving...' : widget.onSaveDay != null ? 'Save this day' : 'Save trip draft')),
+                          if (widget.onSaveDay == null && widget.controller.draftFor(place.id) != null)
                             TextButton.icon(
                                 onPressed: _saving ? null : _deleteDraft,
                                 icon: const Icon(Icons.delete_outline),
@@ -663,7 +640,7 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                               label: const Text('Copy my day plan'),
                               onPressed: () async {
                                 final text =
-                                    'One day in ${place.name}\nPace: $_pace\nMeal: ${_restaurant.text.trim().isEmpty ? 'Choose nearby' : _restaurant.text.trim()}\nTransport: ${transportModes[_mode]}\nDraft timings - verify routes, opening hours and hotel access.\n\n${_plan!.map((stop) => '${stop.timeRange} ${stop.title}\n${stop.note}').join('\n\n')}';
+                                    'One day in ${place.name}\nPace: $_pace\nMeal: ${_restaurant.text.trim().isEmpty ? 'Choose nearby' : _restaurant.text.trim()}\nTransport: ${transportModes[_mode]}\nDraft timings - verify routes, opening hours and venue hours.\n\n${_plan!.map((stop) => '${stop.timeRange} ${stop.title}\n${stop.note}').join('\n\n')}';
                                 await Clipboard.setData(
                                     ClipboardData(text: text));
                                 if (context.mounted) {
@@ -674,8 +651,8 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                 }
                               }),
                           const SizedBox(height: 12),
-                          const Text(
-                              'Use Save trip draft to resume here later, or Copy my day plan to keep a text version. Unsaved edits are lost when you leave.'),
+                          Text(
+                              widget.onSaveDay != null ? 'Save this day to keep it in your whole trip. Unsaved edits are lost when you leave.' : 'Use Save trip draft to resume here later, or Copy my day plan to keep a text version. Unsaved edits are lost when you leave.'),
                         ],
                       ])),
             ),
