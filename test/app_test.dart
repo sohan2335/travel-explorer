@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travel_explorer/widgets/city_venue_picker.dart';
 import 'package:travel_explorer/services/place_catalog.dart';
 import 'package:travel_explorer/services/local_store.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -154,6 +155,25 @@ void main() {
     expect(c.myDayFor('goa').placeIds['Fort Aguada'], 'goa:sight:Fort Aguada');
     await tester.pumpWidget(const SizedBox());
     c.dispose();
+  });
+
+  testWidgets('venue picker fits above a mobile keyboard', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.runAsync(() => PlaceCatalog.load(offline: true));
+    await tester.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => Scaffold(
+                body: TextButton(
+                    onPressed: () => pickCityVenue(context, destinations.first),
+                    child: const Text('Pick'))))));
+    await tester.tap(find.text('Pick'));
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Search places in this city'), findsOneWidget);
   });
 
   testWidgets('My day shows the five-stop limit and disables adding',
