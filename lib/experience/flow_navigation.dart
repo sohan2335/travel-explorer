@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'experience_controller.dart';
 import 'onboarding_screen.dart';
+import 'preferences_screen.dart';
 
 PageRouteBuilder<void> experienceRoute(BuildContext context, Widget screen) {
   final reduced = MediaQuery.disableAnimationsOf(context);
@@ -37,13 +38,28 @@ void continueExperience(BuildContext context) {
           onDone: () async {
             await scope.controller.completeIntro();
             if (introContext.mounted) {
-              replaceExperience(introContext, scope.homeBuilder());
+              showPreferences(introContext);
             }
           },
         ),
       ),
     );
+  } else if (!scope.controller.preferencesDone) {
+    showPreferences(context);
   } else {
     replaceExperience(context, scope.homeBuilder());
   }
+}
+
+void showPreferences(BuildContext context) {
+  final scope = ExperienceScope.of(context);
+  replaceExperience(
+    context,
+    Builder(
+      builder: (preferencesContext) => PreferencesScreen(
+        onDone: () async =>
+            replaceExperience(preferencesContext, scope.homeBuilder()),
+      ),
+    ),
+  );
 }
