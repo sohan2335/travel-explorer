@@ -167,10 +167,11 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                                       !selected.contains(name)
                                                   ? null
                                                   : (checked) => update(() {
-                                                        if (checked == true)
+                                                        if (checked == true) {
                                                           selected.add(name);
-                                                        else
+                                                        } else {
                                                           selected.remove(name);
+                                                        }
                                                       })),
                                       ]);
                                     })),
@@ -194,11 +195,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                         !selected.any((p) =>
                                             p.toLowerCase() ==
                                             name.toLowerCase()) &&
-                                        selected.length < 4)
+                                        selected.length < 4) {
                                       update(() {
                                         selected.add(name);
                                         custom.clear();
                                       });
+                                    }
                                   })
                             ]),
                             const SizedBox(height: 12),
@@ -265,12 +267,13 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                   final restored = await widget.controller.saveDraft(previous);
                   if (mounted) {
                     setState(() {});
-                    if (!restored)
+                    if (!restored) {
                       ScaffoldMessenger.of(context)
                         ..clearSnackBars()
                         ..showSnackBar(const SnackBar(
                             content: Text(
                                 'Could not restore the saved draft on this device')));
+                    }
                   }
                 })
             : null,
@@ -305,12 +308,13 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
         _error = error.message.toString();
       }
     });
-    if (_plan != null)
+    if (_plan != null) {
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
         ..showSnackBar(const SnackBar(
             content: Text(
                 'Your day plan is ready below. Save the draft to keep it.')));
+    }
   }
 
   @override
@@ -380,11 +384,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                             onPressed: () async {
                               final time = await showTimePicker(
                                   context: context, initialTime: _arrival);
-                              if (time != null && mounted)
+                              if (time != null && mounted) {
                                 setState(() {
                                   _arrival = time;
                                   _clearPlan();
                                 });
+                              }
                             }),
                         const SizedBox(height: 16),
                         OutlinedButton.icon(
@@ -394,11 +399,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                           onPressed: () async {
                             final time = await showTimePicker(
                                 context: context, initialTime: _hotelReady);
-                            if (time != null && mounted)
+                            if (time != null && mounted) {
                               setState(() {
                                 _hotelReady = time;
                                 _clearPlan();
                               });
+                            }
                           },
                         ),
                         const Text(
@@ -418,13 +424,14 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                     value: item, child: Text(item)))
                                 .toList(),
                             onChanged: (value) {
-                              if (value != null)
+                              if (value != null) {
                                 setState(() {
                                   _attraction = value;
                                   _additionalPlaces.removeWhere((p) =>
                                       p.toLowerCase() == value.toLowerCase());
                                   _clearPlan();
                                 });
+                              }
                             }),
                         const SizedBox(height: 16),
                         Text('More stops in your day',
@@ -476,11 +483,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                     value: entry.key, child: Text(entry.value)))
                                 .toList(),
                             onChanged: (value) {
-                              if (value != null)
+                              if (value != null) {
                                 setState(() {
                                   _mode = value;
                                   _clearPlan();
                                 });
+                              }
                             }),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
@@ -492,13 +500,14 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                   value: pace, child: Text(pace)))
                               .toList(),
                           onChanged: (value) {
-                            if (value != null)
+                            if (value != null) {
                               setState(() {
                                 _pace = value;
                                 _visit = null;
                                 _rest = restMinutesByPace[value]!;
                                 _clearPlan();
                               });
+                            }
                           },
                         ),
                         const SizedBox(height: 8),
@@ -516,11 +525,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                     value: m, child: Text('$m minutes')))
                                 .toList(),
                             onChanged: (value) {
-                              if (value != null)
+                              if (value != null) {
                                 setState(() {
                                   _visit = value;
                                   _clearPlan();
                                 });
+                              }
                             }),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<int>(
@@ -534,11 +544,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                     child: Text('$minutes minutes')))
                                 .toList(),
                             onChanged: (value) {
-                              if (value != null)
+                              if (value != null) {
                                 setState(() {
                                   _rest = value;
                                   _clearPlan();
                                 });
+                              }
                             }),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<int>(
@@ -551,11 +562,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                     child: Text('$minutes minutes')))
                                 .toList(),
                             onChanged: (value) {
-                              if (value != null)
+                              if (value != null) {
                                 setState(() {
                                   _travel = value;
                                   _clearPlan();
                                 });
+                              }
                             }),
                         const SizedBox(height: 12),
                         const Text(
@@ -647,11 +659,12 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
                                     'One day in ${place.name}\nPace: $_pace\nMeal: ${_restaurant.text.trim().isEmpty ? 'Choose nearby' : _restaurant.text.trim()}\nTransport: ${transportModes[_mode]}\nDraft timings - verify routes, opening hours and hotel access.\n\n${_plan!.map((stop) => '${stop.timeRange} ${stop.title}\n${stop.note}').join('\n\n')}';
                                 await Clipboard.setData(
                                     ClipboardData(text: text));
-                                if (context.mounted)
+                                if (context.mounted) {
                                   ScaffoldMessenger.of(context)
                                     ..clearSnackBars()
                                     ..showSnackBar(const SnackBar(
                                         content: Text('Day plan copied')));
+                                }
                               }),
                           const SizedBox(height: 12),
                           const Text(

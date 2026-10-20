@@ -33,8 +33,9 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
   @override
   void initState() {
     super.initState();
-    if (Uri.base.queryParameters.containsKey('neon_auth_session_verifier'))
+    if (Uri.base.queryParameters.containsKey('neon_auth_session_verifier')) {
       _tab = 4;
+    }
     _search = TextEditingController(text: widget.controller.query);
   }
 
@@ -530,13 +531,14 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
                                         : 0,
                                 onDestinationSelected: (index) {
                                   setState(() => _tab = [0, 3, 1][index]);
-                                  if (index == 2)
+                                  if (index == 2) {
                                     WidgetsBinding.instance
                                         .addPostFrameCallback((_) {
                                       if (mounted) _searchFocus.requestFocus();
                                     });
-                                  else
+                                  } else {
                                     _searchFocus.unfocus();
+                                  }
                                 },
                                 destinations: const [
                                   NavigationDestination(
@@ -743,7 +745,7 @@ class DestinationDetails extends StatelessWidget {
                           constraints: const BoxConstraints(maxWidth: 1000),
                           child: Padding(
                               padding:
-                                  const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                                  const EdgeInsets.fromLTRB(20, 12, 20, 96),
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

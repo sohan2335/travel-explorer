@@ -26,12 +26,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _restore() async {
     try {
       final result = await authRequest('get-session');
-      if (mounted)
+      if (mounted) {
         setState(() => _user = result?['user'] as Map<String, dynamic>?);
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() => _message =
             'Your sign-in session could not be completed. Please try Continue with Google again.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -45,8 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await action();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _message = e.toString().replaceFirst('Bad state: ', ''));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -62,13 +65,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       _password.clear();
       final result = await authRequest('get-session');
-      if (mounted)
+      if (mounted) {
         setState(() {
           _user = result?['user'] as Map<String, dynamic>?;
-          if (_user == null)
+          if (_user == null) {
             _message =
                 'Check your email for verification, then sign in. If already verified, allow session cookies and retry.';
+          }
         });
+      }
     });
   }
 
@@ -141,9 +146,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     'disableRedirect': true
                                   });
                                   final url = result?['url'];
-                                  if (url is! String)
+                                  if (url is! String) {
                                     throw StateError(
                                         'Google sign-in is unavailable.');
+                                  }
                                   navigateToAuth(url);
                                 })),
                     const Padding(

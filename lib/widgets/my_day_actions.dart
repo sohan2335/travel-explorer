@@ -35,13 +35,7 @@ class MyDayActions extends StatelessWidget {
           if (name != null)
             FilledButton.tonalIcon(
                 icon: Icon(selected ? Icons.check_circle_outline : Icons.add),
-                label: Text(selected
-                    ? 'Added to My day'
-                    : kind == 'hotel'
-                        ? 'Choose stay for My day'
-                        : kind == 'restaurant'
-                            ? 'Choose meal for My day'
-                            : 'Add to My day'),
+                label: Text(selected ? 'Added to my day' : 'Add to my day'),
                 onPressed: () async {
                   final ok = await controller.addToMyDay(destination.id, name!,
                       kind: kind, placeId: placeId);
@@ -52,7 +46,7 @@ class MyDayActions extends StatelessWidget {
                         content: Text(ok
                             ? (selected
                                 ? 'Already in My day'
-                                : 'Added to My day')
+                                : 'Added to my day')
                             : 'Could not add this pick. Choose up to five outings and check device storage.')));
                 }),
           if (showReview)

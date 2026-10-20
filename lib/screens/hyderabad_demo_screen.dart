@@ -42,8 +42,9 @@ class _HyderabadDemoScreenState extends State<HyderabadDemoScreen> {
                               initialDate: _date,
                               firstDate: DateTime(2026),
                               lastDate: DateTime(2030, 12, 31));
-                          if (selected != null && mounted)
+                          if (selected != null && mounted) {
                             setState(() => _date = selected);
+                          }
                         }),
                     const SizedBox(height: 12),
                     if (!palaceOpenOn(_date))

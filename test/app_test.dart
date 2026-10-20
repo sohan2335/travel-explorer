@@ -142,7 +142,7 @@ void main() {
             destination: destinations.firstWhere((d) => d.id == 'goa'),
             controller: c)));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Add to My day'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Add to my day'));
     await tester.pumpAndSettle();
     await tester.enterText(
         find.widgetWithText(TextField, 'Search places in this city'), 'Fort');
@@ -175,7 +175,7 @@ void main() {
     expect(
         tester
             .widget<OutlinedButton>(
-                find.widgetWithText(OutlinedButton, 'Add to My day'))
+                find.widgetWithText(OutlinedButton, 'Add to my day'))
             .onPressed,
         isNull);
     await tester.pumpWidget(const SizedBox());

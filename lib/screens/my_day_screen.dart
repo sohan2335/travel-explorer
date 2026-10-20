@@ -71,11 +71,12 @@ class _MyDayScreenState extends State<MyDayScreen> {
                       child: const Text('Cancel')),
                   FilledButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Add to My day'))
+                      child: const Text('Add to my day'))
                 ]));
-    if (accepted == true && _custom.text.trim().isNotEmpty && mounted)
+    if (accepted == true && _custom.text.trim().isNotEmpty && mounted) {
       _notice(await widget.controller
           .addToMyDay(widget.destination.id, _custom.text));
+    }
   }
 
   @override
@@ -272,7 +273,7 @@ class _MyDayScreenState extends State<MyDayScreen> {
                                     placeId: picked.id));
                               },
                         icon: const Icon(Icons.add_location_alt_outlined),
-                        label: const Text('Add to My day')),
+                        label: const Text('Add to my day')),
                     TextButton(
                         onPressed:
                             day.stops.length >= 5 ? null : _addCustomStop,

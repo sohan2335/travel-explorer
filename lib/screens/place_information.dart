@@ -31,7 +31,7 @@ Future<void> showPlaceInformation(BuildContext context, Destination destination,
                     icon: const Icon(Icons.close))
               ]),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 96),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(name, style: Theme.of(context).textTheme.headlineMedium),

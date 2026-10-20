@@ -75,7 +75,7 @@ class _CityDiscoverScreenState extends State<CityDiscoverScreen> {
                 onPressed: () => Navigator.pop(context)),
             title: Text('Discover ${_city.name}')),
         body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
             child: Center(
                 child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1000),
@@ -174,9 +174,10 @@ class _CityDiscoverScreenState extends State<CityDiscoverScreen> {
                         future: _catalog,
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) {
-                            if (snapshot.hasError)
+                            if (snapshot.hasError) {
                               return const Text(
                                   'The directory could not load. Use the nearby map search above.');
+                            }
                             return const Padding(
                                 padding: EdgeInsets.all(24),
                                 child:
