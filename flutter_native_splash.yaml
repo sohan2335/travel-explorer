@@ -1,0 +1,13 @@
+flutter_native_splash:
+  color: "#0E0E10"
+  color_dark: "#0E0E10"
+  image: assets/branding/compass.png
+  image_dark: assets/branding/compass.png
+  android: true
+  ios: false
+  web: true
+  android_12:
+    color: "#0E0E10"
+    color_dark: "#0E0E10"
+    image: assets/branding/compass.png
+    image_dark: assets/branding/compass.png
