@@ -21,7 +21,12 @@ jobs:
           git clone --depth 1 --branch 3.47.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
       - run: flutter pub get
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool
+      - run: flutter analyze
       - run: flutter test
+      - run: dart tool/check_core.dart
+      - run: python3 tool/check_import.py
       - name: Build web
         env:
           REPO_NAME: ${{ github.event.repository.name }}

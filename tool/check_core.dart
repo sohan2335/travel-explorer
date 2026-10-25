@@ -1,68 +1,76 @@
 // Run without Flutter's socket-based test runner:
 // dart tool/check_core.dart
-import '../lib/models/day_plan.dart';
-import '../lib/models/trip_draft.dart';
-import '../lib/data/hyderabad_demo.dart';
+import 'package:travel_explorer/models/day_plan.dart';
+import 'package:travel_explorer/models/trip_draft.dart';
+import 'package:travel_explorer/data/hyderabad_demo.dart';
 import 'dart:convert';
 import 'dart:io';
-import '../lib/models/local_place.dart';
-import '../lib/services/travel_links.dart';
-import '../lib/data/destinations.dart';
+import 'package:travel_explorer/models/local_place.dart';
+import 'package:travel_explorer/services/travel_links.dart';
+import 'package:travel_explorer/data/destinations.dart';
 
 void check(bool condition, String message) {
   if (!condition) throw StateError(message);
 }
 
 void main() {
-  check(!palaceOpenOn(DateTime(2026, 10, 23)),
-      'Friday must flag palace closure.');
-  check(palaceOpenOn(DateTime(2026, 10, 22)),
-      'Thursday allows the example route.');
+  check(
+    !palaceOpenOn(DateTime(2026, 10, 23)),
+    'Friday must flag palace closure.',
+  );
+  check(
+    palaceOpenOn(DateTime(2026, 10, 22)),
+    'Thursday allows the example route.',
+  );
   for (var i = 1; i < hyderabadDemo.length; i++) {
     check(
-        hyderabadDemo[i].startMinutes ==
-            hyderabadDemo[i - 1].startMinutes +
-                hyderabadDemo[i - 1].durationMinutes,
-        'Demo stops must be contiguous.');
+      hyderabadDemo[i].startMinutes ==
+          hyderabadDemo[i - 1].startMinutes +
+              hyderabadDemo[i - 1].durationMinutes,
+      'Demo stops must be contiguous.',
+    );
   }
   for (final pace in visitMinutesByPace.keys) {
     final paced = buildDayPlan(
-        arrivalMinutes: 540,
-        origin: 'Station',
-        hotel: 'Hotel',
-        attraction: 'Fort',
-        restMinutes: restMinutesByPace[pace]!,
-        travelMinutes: 30,
-        pace: pace);
-    check(
-        paced.firstWhere((s) => s.title == 'Explore Fort').durationMinutes ==
-            visitMinutesByPace[pace],
-        'Visit duration must match pace.');
-  }
-  const draft = TripDraft(
-      destinationId: 'goa',
+      arrivalMinutes: 540,
       origin: 'Station',
       hotel: 'Hotel',
-      arrivalMinutes: 540,
-      hotelReadyMinutes: 840,
-      restMinutes: 90,
-      travelMinutes: 60,
-      mode: 'transit',
-      attraction: 'Palolem Beach',
-      pace: 'Relaxed',
-      hasPlan: true);
+      attraction: 'Fort',
+      restMinutes: restMinutesByPace[pace]!,
+      travelMinutes: 30,
+      pace: pace,
+    );
+    check(
+      paced.firstWhere((s) => s.title == 'Explore Fort').durationMinutes ==
+          visitMinutesByPace[pace],
+      'Visit duration must match pace.',
+    );
+  }
+  const draft = TripDraft(
+    destinationId: 'goa',
+    origin: 'Station',
+    hotel: 'Hotel',
+    arrivalMinutes: 540,
+    hotelReadyMinutes: 840,
+    restMinutes: 90,
+    travelMinutes: 60,
+    mode: 'transit',
+    attraction: 'Palolem Beach',
+    pace: 'Relaxed',
+    hasPlan: true,
+  );
   final restored = TripDraft.fromJson(
-      jsonDecode(jsonEncode(draft.toJson())) as Map<String, dynamic>);
+    jsonDecode(jsonEncode(draft.toJson())) as Map<String, dynamic>,
+  );
   check(
-      restored.pace == 'Relaxed' &&
-          restored.hasPlan &&
-          restored.hotel == 'Hotel',
-      'Draft inputs must survive JSON round trip.');
+    restored.pace == 'Relaxed' && restored.hasPlan && restored.hotel == 'Hotel',
+    'Draft inputs must survive JSON round trip.',
+  );
   var badDrafts = 0;
   for (final invalid in [
     {'version': 99},
     {...draft.toJson(), 'restMinutes': -1},
-    {...draft.toJson(), 'mode': 'teleport'}
+    {...draft.toJson(), 'mode': 'teleport'},
   ]) {
     try {
       TripDraft.fromJson(invalid);
@@ -76,120 +84,158 @@ void main() {
           .map((r) => LocalPlace.fromJson(Map<String, dynamic>.from(r as Map)))
           .toList();
   check(
-      places.length == 24, 'Twenty-four sourced directory entries must load.');
-  check(places.map((p) => p.id).toSet().length == places.length,
-      'Place IDs must be unique.');
-  check(places.every((p) => destinations.any((d) => d.id == p.cityId)),
-      'Places need a known city.');
+    places.length == 24,
+    'Twenty-four sourced directory entries must load.',
+  );
   check(
-      places
-          .where((p) => p.cityId == 'hyderabad')
-          .map((p) => p.kind)
-          .toSet()
-          .containsAll(placeKinds.keys),
-      'Hyderabad demonstrates every directory category.');
+    places.map((p) => p.id).toSet().length == places.length,
+    'Place IDs must be unique.',
+  );
   check(
-      destinations.every((d) => ['hotel', 'restaurant'].every(
-          (kind) => places.any((p) => p.cityId == d.id && p.kind == kind))),
-      'Every city needs a sourced stay and dining example.');
+    places.every((p) => destinations.any((d) => d.id == p.cityId)),
+    'Places need a known city.',
+  );
+  check(
+    places
+        .where((p) => p.cityId == 'hyderabad')
+        .map((p) => p.kind)
+        .toSet()
+        .containsAll(placeKinds.keys),
+    'Hyderabad demonstrates every directory category.',
+  );
+  check(
+    destinations.every(
+      (d) => [
+        'hotel',
+        'restaurant',
+      ].every((kind) => places.any((p) => p.cityId == d.id && p.kind == kind)),
+    ),
+    'Every city needs a sourced stay and dining example.',
+  );
   final legacy = Map<String, dynamic>.from(draft.toJson())
     ..remove('restaurant')
     ..remove('visitMinutes');
   check(
-      TripDraft.fromJson(legacy).restaurant.isEmpty &&
-          TripDraft.fromJson(legacy).visitMinutes == 0,
-      'Old drafts must remain readable.');
-  final selected = TripDraft.fromJson(
-      {...draft.toJson(), 'restaurant': 'Sample cafe', 'visitMinutes': 240});
-  check(selected.restaurant == 'Sample cafe' && selected.visitMinutes == 240,
-      'Food and custom duration must restore.');
+    TripDraft.fromJson(legacy).restaurant.isEmpty &&
+        TripDraft.fromJson(legacy).visitMinutes == 0,
+    'Old drafts must remain readable.',
+  );
+  final selected = TripDraft.fromJson({
+    ...draft.toJson(),
+    'restaurant': 'Sample cafe',
+    'visitMinutes': 240,
+  });
+  check(
+    selected.restaurant == 'Sample cafe' && selected.visitMinutes == 240,
+    'Food and custom duration must restore.',
+  );
   final outing = buildDayPlan(
-      arrivalMinutes: 420,
-      origin: 'Station',
-      hotel: 'Hotel',
-      attraction: 'Park',
-      restMinutes: 0,
-      travelMinutes: 30,
-      visitMinutesOverride: 240,
-      mealPlace: 'Sample cafe');
+    arrivalMinutes: 420,
+    origin: 'Station',
+    hotel: 'Hotel',
+    attraction: 'Park',
+    restMinutes: 0,
+    travelMinutes: 30,
+    visitMinutesOverride: 240,
+    mealPlace: 'Sample cafe',
+  );
   check(
-      outing.firstWhere((s) => s.title == 'Explore Park').durationMinutes ==
-          240,
-      'Longer outings must use the selected duration.');
+    outing.firstWhere((s) => s.title == 'Explore Park').durationMinutes == 240,
+    'Longer outings must use the selected duration.',
+  );
   check(
-      outing
-          .firstWhere((s) => s.title == 'Meal & a break')
-          .note
-          .contains('Sample cafe'),
-      'The selected restaurant must appear in the plan.');
+    outing
+        .firstWhere((s) => s.title == 'Meal & a break')
+        .note
+        .contains('Sample cafe'),
+    'The selected restaurant must appear in the plan.',
+  );
   check(
-      outing
-              .firstWhere((s) => s.title == 'Travel to your meal stop')
-              .destination ==
-          'Sample cafe',
-      'A selected restaurant needs its own transfer.');
-  check(outing.last.origin == 'Sample cafe',
-      'The return route must start at the meal stop.');
+    outing
+            .firstWhere((s) => s.title == 'Travel to your meal stop')
+            .destination ==
+        'Sample cafe',
+    'A selected restaurant needs its own transfer.',
+  );
+  check(
+    outing.last.origin == 'Sample cafe',
+    'The return route must start at the meal stop.',
+  );
   for (var i = 1; i < outing.length; i++) {
     check(
-        outing[i].startMinutes ==
-            outing[i - 1].startMinutes + outing[i - 1].durationMinutes,
-        'Meal transfers must keep the schedule contiguous.');
+      outing[i].startMinutes ==
+          outing[i - 1].startMinutes + outing[i - 1].durationMinutes,
+      'Meal transfers must keep the schedule contiguous.',
+    );
   }
   final withCheckIn = buildDayPlan(
-      arrivalMinutes: 540,
-      origin: 'Station',
-      hotel: 'Hotel',
-      attraction: 'Fort',
-      restMinutes: 60,
-      travelMinutes: 60,
-      hotelReadyMinutes: 840);
-  check(withCheckIn.any((stop) => stop.title == 'Time before room access'),
-      'Early hotel arrivals need a waiting slot.');
+    arrivalMinutes: 540,
+    origin: 'Station',
+    hotel: 'Hotel',
+    attraction: 'Fort',
+    restMinutes: 60,
+    travelMinutes: 60,
+    hotelReadyMinutes: 840,
+  );
   check(
-      withCheckIn
-              .firstWhere((stop) => stop.title == 'Rest & refresh')
-              .startMinutes >=
-          840,
-      'Rest must wait for confirmed room access.');
-  check(withCheckIn.last.timeRange == '19:00 - 20:00',
-      'Waiting must shift the remainder of the plan.');
+    withCheckIn.any((stop) => stop.title == 'Time before room access'),
+    'Early hotel arrivals need a waiting slot.',
+  );
+  check(
+    withCheckIn
+            .firstWhere((stop) => stop.title == 'Rest & refresh')
+            .startMinutes >=
+        840,
+    'Rest must wait for confirmed room access.',
+  );
+  check(
+    withCheckIn.last.timeRange == '19:00 - 20:00',
+    'Waiting must shift the remainder of the plan.',
+  );
   final plan = buildDayPlan(
-      arrivalMinutes: 540,
-      origin: 'Airport',
-      hotel: 'My hotel',
-      attraction: 'Palolem Beach',
-      restMinutes: 60,
-      travelMinutes: 60);
+    arrivalMinutes: 540,
+    origin: 'Airport',
+    hotel: 'My hotel',
+    attraction: 'Palolem Beach',
+    restMinutes: 60,
+    travelMinutes: 60,
+  );
   check(plan.length == 8, 'All eight arrival-day steps must be present.');
-  check(plan.first.timeRange == '09:00 - 09:30',
-      'Arrival starts at the selected time.');
-  check(plan.last.startMinutes + plan.last.durationMinutes == 990,
-      'The plan ends at 16:30.');
+  check(
+    plan.first.timeRange == '09:00 - 09:30',
+    'Arrival starts at the selected time.',
+  );
+  check(
+    plan.last.startMinutes + plan.last.durationMinutes == 990,
+    'The plan ends at 16:30.',
+  );
   for (var index = 1; index < plan.length; index++) {
     check(
-        plan[index].startMinutes ==
-            plan[index - 1].startMinutes + plan[index - 1].durationMinutes,
-        'The timetable must have no overlapping steps.');
+      plan[index].startMinutes ==
+          plan[index - 1].startMinutes + plan[index - 1].durationMinutes,
+      'The timetable must have no overlapping steps.',
+    );
   }
   final noRest = buildDayPlan(
-      arrivalMinutes: 540,
-      origin: 'Station',
-      hotel: 'Hotel',
-      attraction: 'Fort',
-      restMinutes: 0,
-      travelMinutes: 30);
+    arrivalMinutes: 540,
+    origin: 'Station',
+    hotel: 'Hotel',
+    attraction: 'Fort',
+    restMinutes: 0,
+    travelMinutes: 30,
+  );
   check(noRest.length == 7, 'Zero rest does not create a zero-length step.');
   var rejected = 0;
   for (final arrival in [-1, 1400, 1440]) {
     try {
       buildDayPlan(
-          arrivalMinutes: arrival,
-          origin: 'Station',
-          hotel: 'Hotel',
-          attraction: 'Fort',
-          restMinutes: 60,
-          travelMinutes: 60);
+        arrivalMinutes: arrival,
+        origin: 'Station',
+        hotel: 'Hotel',
+        attraction: 'Fort',
+        restMinutes: 60,
+        travelMinutes: 60,
+      );
     } on ArgumentError {
       rejected++;
     }
@@ -198,90 +244,118 @@ void main() {
   var blankRejected = false;
   try {
     buildDayPlan(
-        arrivalMinutes: 540,
-        origin: ' ',
-        hotel: 'Hotel',
-        attraction: 'Fort',
-        restMinutes: 60,
-        travelMinutes: 60);
+      arrivalMinutes: 540,
+      origin: ' ',
+      hotel: 'Hotel',
+      attraction: 'Fort',
+      restMinutes: 60,
+      travelMinutes: 60,
+    );
   } on ArgumentError {
     blankRejected = true;
   }
   check(blankRejected, 'Blank arrival points must be rejected.');
-  final route =
-      directions(origin: 'A & B', destination: 'Café, Paris', mode: 'transit');
-  check(route.queryParameters['origin'] == 'A & B',
-      'URL encoding must preserve origin text.');
-  check(route.queryParameters['destination'] == 'Café, Paris',
-      'URL encoding must preserve accents.');
+  final route = directions(
+    origin: 'A & B',
+    destination: 'Café, Paris',
+    mode: 'transit',
+  );
+  check(
+    route.queryParameters['origin'] == 'A & B',
+    'URL encoding must preserve origin text.',
+  );
+  check(
+    route.queryParameters['destination'] == 'Café, Paris',
+    'URL encoding must preserve accents.',
+  );
   check(route.queryParameters['api'] == '1', 'Maps URLs require api=1.');
-  check(!directions(destination: 'Goa').queryParameters.containsKey('origin'),
-      'Blank origin lets the traveller choose a starting point in Maps.');
   check(
-      hotelSearch('Eiffel Tower', 'Paris, France', 'Budget')
-              .queryParameters['query'] ==
-          'Budget hotels near Eiffel Tower, Paris, France',
-      'Hotel searches must include the attraction and city.');
+    !directions(destination: 'Goa').queryParameters.containsKey('origin'),
+    'Blank origin lets the traveller choose a starting point in Maps.',
+  );
   check(
-      destinations.map((place) => place.id).toSet().length ==
-          destinations.length,
-      'Destination IDs must be unique.');
-  check(destinations.map((place) => place.country).toSet().length == 3,
-      'The catalog includes India, France, and Italy.');
-  check(destinations.every((place) => place.attractions.length >= 2),
-      'Every destination needs two or more attractions.');
+    hotelSearch(
+          'Eiffel Tower',
+          'Paris, France',
+          'Budget',
+        ).queryParameters['query'] ==
+        'Budget hotels near Eiffel Tower, Paris, France',
+    'Hotel searches must include the attraction and city.',
+  );
+  check(
+    destinations.map((place) => place.id).toSet().length == destinations.length,
+    'Destination IDs must be unique.',
+  );
+  check(
+    destinations.map((place) => place.country).toSet().length == 3,
+    'The catalog includes India, France, and Italy.',
+  );
+  check(
+    destinations.every((place) => place.attractions.length >= 2),
+    'Every destination needs two or more attractions.',
+  );
   final multiple = buildDayPlan(
-      arrivalMinutes: 8 * 60,
-      origin: 'Station',
-      hotel: 'Hotel',
-      attraction: 'Museum',
-      restMinutes: 0,
-      travelMinutes: 15,
-      additionalPlaces: ['Mall', 'Park'],
-      mealPlace: 'Cafe',
-      visitMinutesOverride: 30);
-  check(multiple.where((s) => s.title.startsWith('Explore ')).length == 3,
-      'Every selected outing must appear.');
+    arrivalMinutes: 8 * 60,
+    origin: 'Station',
+    hotel: 'Hotel',
+    attraction: 'Museum',
+    restMinutes: 0,
+    travelMinutes: 15,
+    additionalPlaces: ['Mall', 'Park'],
+    mealPlace: 'Cafe',
+    visitMinutesOverride: 30,
+  );
   check(
-      multiple.firstWhere((s) => s.title == 'Travel to Mall').origin ==
-          'Museum',
-      'Second outing starts at the first.');
+    multiple.where((s) => s.title.startsWith('Explore ')).length == 3,
+    'Every selected outing must appear.',
+  );
   check(
-      multiple.firstWhere((s) => s.title == 'Travel to Park').origin == 'Mall',
-      'Third outing starts at the second.');
+    multiple.firstWhere((s) => s.title == 'Travel to Mall').origin == 'Museum',
+    'Second outing starts at the first.',
+  );
   check(
-      multiple
-              .firstWhere((s) => s.title == 'Travel to your meal stop')
-              .origin ==
-          'Park',
-      'Meal transfer follows the last outing.');
-  check(multiple.last.startMinutes + multiple.last.durationMinutes == 780,
-      'Extra visits and transfers must count in the end time.');
+    multiple.firstWhere((s) => s.title == 'Travel to Park').origin == 'Mall',
+    'Third outing starts at the second.',
+  );
+  check(
+    multiple.firstWhere((s) => s.title == 'Travel to your meal stop').origin ==
+        'Park',
+    'Meal transfer follows the last outing.',
+  );
+  check(
+    multiple.last.startMinutes + multiple.last.durationMinutes == 780,
+    'Extra visits and transfers must count in the end time.',
+  );
   for (var i = 1; i < multiple.length; i++) {
     check(
-        multiple[i].startMinutes ==
-            multiple[i - 1].startMinutes + multiple[i - 1].durationMinutes,
-        'Multiple stops must form a continuous timeline.');
+      multiple[i].startMinutes ==
+          multiple[i - 1].startMinutes + multiple[i - 1].durationMinutes,
+      'Multiple stops must form a continuous timeline.',
+    );
   }
   final multiDraft = Map<String, dynamic>.from(draft.toJson())
     ..['additionalPlaces'] = ['Mall', 'Park'];
   check(
-      TripDraft.fromJson(multiDraft).additionalPlaces.join(',') == 'Mall,Park',
-      'Additional places must survive saving.');
+    TripDraft.fromJson(multiDraft).additionalPlaces.join(',') == 'Mall,Park',
+    'Additional places must survive saving.',
+  );
   final oldDraft = Map<String, dynamic>.from(draft.toJson())
     ..remove('additionalPlaces');
-  check(TripDraft.fromJson(oldDraft).additionalPlaces.isEmpty,
-      'Old drafts must remain compatible.');
+  check(
+    TripDraft.fromJson(oldDraft).additionalPlaces.isEmpty,
+    'Old drafts must remain compatible.',
+  );
   var duplicateRejected = false;
   try {
     buildDayPlan(
-        arrivalMinutes: 480,
-        origin: 'Station',
-        hotel: 'Hotel',
-        attraction: 'Mall',
-        restMinutes: 0,
-        travelMinutes: 15,
-        additionalPlaces: ['mall']);
+      arrivalMinutes: 480,
+      origin: 'Station',
+      hotel: 'Hotel',
+      attraction: 'Mall',
+      restMinutes: 0,
+      travelMinutes: 15,
+      additionalPlaces: ['mall'],
+    );
   } on ArgumentError {
     duplicateRejected = true;
   }
@@ -289,17 +363,19 @@ void main() {
   var midnightRejected = false;
   try {
     buildDayPlan(
-        arrivalMinutes: 1200,
-        origin: 'Station',
-        hotel: 'Hotel',
-        attraction: 'Museum',
-        restMinutes: 0,
-        travelMinutes: 30,
-        additionalPlaces: ['Mall', 'Park']);
+      arrivalMinutes: 1200,
+      origin: 'Station',
+      hotel: 'Hotel',
+      attraction: 'Museum',
+      restMinutes: 0,
+      travelMinutes: 30,
+      additionalPlaces: ['Mall', 'Park'],
+    );
   } on ArgumentError {
     midnightRejected = true;
   }
   check(midnightRejected, 'Extra outings must not run past midnight.');
-  print(
-      'Core checks passed: day-plan arithmetic and validation, URL encoding, and destination integrity.');
+  stdout.writeln(
+    'Core checks passed: day-plan arithmetic and validation, URL encoding, and destination integrity.',
+  );
 }

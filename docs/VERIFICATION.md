@@ -1,5 +1,47 @@
 # Verification record
 
+## Final submission audit — 25 October 2026
+
+The current result is [FINAL_SUBMISSION_CHECK.md](FINAL_SUBMISSION_CHECK.md).
+All four core stages are implemented. Fixed the keyboard/large-text venue-picker
+overflow and inaccessible list, resolved all 36 analysis findings, applied standard
+formatting and supplied the missing icon font. Standard analysis now reports no
+issues; 77 tests with coverage, the navigation dry-run, core checks, three importer
+tests and the release web build pass. Eighteen local documentation targets are
+valid, and the 170-second MP4 decodes successfully. The public directory returned
+24 entries across ten cities. Public repository access,
+narrated public Drive video and physical-device testing are
+explicitly listed as outstanding in the final report. Earlier dated records below
+describe previous revisions, not the current result.
+
+The project owner confirmed the extended deadline as **25 October 2026,
+11:59 PM IST**. The original PDF's 22 October deadline no longer applies.
+
+Formatting, analysis, all 77 tests, navigation, core checks, the three importer
+tests, the web release build and service/documentation checks passed again before
+the final release push to `main` and `onboarding`.
+
+## Assignment demo preparation — 22 October 2026
+
+- Re-read all four pages of the original assignment. The demo covers discovery, details, combined search/category filtering, and wishlist add/remove, followed by the matcher and day/whole-trip planning.
+- Captured 636 frames from actual Flutter UI navigation in a separate 390 × 844 demo session; the complete capture passed its assertions. The demo uses bundled venue data and an isolated local-store implementation, with no personal browser account or drafts.
+- Added destination category labels to city cards and symbol/emoji fallback families for readable capture and display.
+- Re-ran the full regression suite: **75 tests passed**. Web build passed; analysis has zero errors/warnings and the existing 36 informational lints.
+- Prepared a Full HD MP4 and a separate 332-word timed voice-over text in `outputs/demo/` in the workspace. The text includes screen cues, implementation notes and the assignment's final upload requirements. The movie has no spoken narration so the candidate can record their own voice.
+- Final MP4 validation: **170 seconds, 5100 video frames, 30 fps, 1920 × 1080, H.264/yuv420p**. Full-video decoding passed without errors, and the final implementation scene was verified at 164 seconds. The finished MP4 is about 7.2 MiB.
+
+## Search and destination matcher — 22 October 2026
+
+- Full `flutter test` suite: **75 tests passed**, including 17 new search/matcher checks.
+- `flutter analyze --no-fatal-infos`: zero errors and warnings; the existing 36 informational lints remain. No new-feature diagnostics were reported.
+- `flutter build web --no-pub`: passed. The previously observed Cupertino font notice remains; no new dependencies were added.
+- Standalone Dart core checks and `git diff --check`: passed.
+- Search tests cover case/whitespace, all four actual destination categories, simultaneous name/category/country conditions, no results, clear/reset, tab changes and preservation of saved cities.
+- Matcher tests cover independent and combined preferences, inclusive day boundaries, stable ties, no choices, unavailable sample profiles, invalid days and clearly labelled partial matches.
+- Widget tests exercised save/explore actions, clearing stale recommendations, and a 320 × 568 phone layout at 1.3 text scale. An overflowing duration dropdown was found and fixed before the final test run.
+- The local preview returned the same SHA-256 for `main.dart.js` as the new build, and includes the matcher. Refresh `http://127.0.0.1:8766/` to load it.
+- This revision was verified with automated widget tests and HTTP build checks. A new browser walkthrough and physical-phone check were not performed. Sample budget styles and visit lengths are explicitly labelled examples, not live price or availability data.
+
 ## Simple travel extensions - 18 October 2026
 
 - Final web build succeeded with Flutter 3.47.7. No new package downloads were needed.

@@ -1,7 +1,10 @@
 /// A place to explore within a destination.
 class Attraction {
-  const Attraction(
-      {required this.name, required this.imageUrl, this.description = ''});
+  const Attraction({
+    required this.name,
+    required this.imageUrl,
+    this.description = '',
+  });
 
   final String name;
   final String imageUrl;

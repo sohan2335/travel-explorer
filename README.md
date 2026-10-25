@@ -1,180 +1,121 @@
 # Travel Explorer
 
-A small Flutter app for the GDGC VNRVJIET App Development volunteer recruitment assignment. Explore destinations in India and abroad, save places, discover stays, food and outings, and make an editable day plan for any city.
+A beginner-friendly Flutter app for the GDGC VNRVJIET App Development assignment.
+Discover cities, save favourite destinations, and create editable travel plans.
 
-## Features
+## Assignment features
 
-- Ten destinations in India, France and Italy across Beaches, Mountains, Heritage, and Adventure.
-- A city chooser at the top of Home; choose a city before opening activity categories. Search and Saved city cards retain their save buttons.
-- Details with a description, best visiting season, and 2-3 named attractions with images.
-- Case-insensitive city search and country filtering, plus activity choices for Dining, Shopping, Events, Stays, Adventure parks and Water parks.
-- Clickable destination/attraction names open background and surroundings links.
-- Nearby hotel searches, public transport/cab/walk/bicycle directions, Uber access, and bicycle-rental searches.
-- An editable day timetable from an optional home, hotel or city starting point: up to five outings, breaks, a meal and return. No airport/station or check-in step is required.
-- Whole-trip planning for 2–7 days in one city: choose a start date, edit each day, save a whole-trip draft and copy the combined itinerary.
-- A Saved screen with saved cities and trip drafts, plus Home, Search and My day in a floating bottom bar.
-- Video-inspired discovery UI: near-black backgrounds, charcoal surfaces, colourful category tiles, large city photos and source-linked place cards.
-- Stays, Dining, Activities, Water parks and Shopping for every city, with a public Neon directory and citywide Maps searches.
-- Use a directory stay, restaurant or outing in the planner; customise the visit duration and save the draft.
-- Responsive layout, empty states, and image-loading/error placeholders.
+- **Discovery:** ten destinations in India, France and Italy across Beaches,
+  Mountains, Heritage and Adventure. Cards show a photo, name, location and category.
+- **Navigation and details:** Home, city guides and a separate Saved wishlist.
+  Every city has a description, visiting season and two or three photographed attractions.
+- **Search and filtering:** case-insensitive name search combined with category
+  and country. Clear the name or reset all filters; no-result messages explain what to change.
+- **Wishlist:** add/remove hearts update the shared state on all screens.
+  Saved IDs persist on the same device, browser profile and origin.
+
+## Additional features
+
+- **Smart Destination Matcher:** choose travel type, budget style and 1–7 days.
+  One point per matching preference, with reasons and clearly labelled partial matches.
+  Budget styles and visit lengths are hand-written examples, not live price quotes.
+- Citywide stays, dining, shopping, events and activity categories. A read-only
+  Neon directory contains 24 curated entries, with a bundled JSON fallback.
+- External Maps links for places, hotels and transit/cab/walking/bicycle directions.
+- My day holds up to five outings, one stay and one meal, with a city-specific picker.
+- Day planning uses an optional starting location, editable visits/breaks and transfer
+  buffers. It rejects schedules past midnight and supports saving/copying drafts.
+- Whole-trip mode plans 2–7 days in one city, with independently editable days.
+- Dark Material 3 UI, bundled Poppins/Lato fonts, photo fallbacks, onboarding and preferences.
+- Optional web Google/email sign-in. Personal trips remain device-local.
 
 ## Run locally
 
-Install the stable [Flutter SDK](https://docs.flutter.dev/install/manual), add its `bin` folder to PATH, and reopen your terminal. Git is required. Chrome or Edge provides a quick first run without Android emulator setup.
-
-On this computer, `./run-app.ps1` can use the Flutter SDK already downloaded in the workspace. It launches Chrome. On another computer, install Flutter first, then use the commands below.
-
-From this project folder:
+Checked with **Flutter 3.47.7 / Dart 3.13.5**. Install the
+[Flutter SDK](https://docs.flutter.dev/install/manual), Git and Chrome or Edge.
+Open this project folder in VS Code, then run:
 
 ```sh
-flutter --version
-flutter doctor
 flutter pub get
-flutter run -d chrome
+flutter run -d web-server --web-hostname 127.0.0.1 --web-port 8767
 ```
 
-For Android, install Android Studio and its SDK, accept licenses with `flutter doctor --android-licenses`, start an emulator or connect a USB debugging enabled device, and use `flutter run`. `flutter devices` lists available targets.
+Open `http://127.0.0.1:8767/` in your normal browser. Reuse the same address and
+browser profile to retain saved places. Clearing site data removes them.
+The Codex preview at port 8766 has separate saved data.
 
-If platform folders have not yet been generated, run `flutter create --platforms=android,web --project-name travel_explorer .` first. This uses the standard Flutter project template; keep this app's `lib/`, tests, and README.
+On the development laptop the bundled SDK can also be used through:
 
-## Check the project
+```powershell
+./run-app.ps1 -Device web-server -Port 8767
+```
+
+For Android, install Android Studio and its SDK, accept the SDK licences, connect
+a device or emulator, then use `flutter run`. Android source is included, but an
+Android build/device test requires an SDK that is absent on the current laptop.
+
+## Checks
 
 ```sh
-dart format lib test
+dart format --output=none --set-exit-if-changed lib test tool
 flutter analyze
-flutter test
-flutter build web
+flutter test --coverage
 dart tool/check_core.dart
+python tool/check_import.py
+flutter build web --no-pub
 ```
 
-See [verification notes](docs/VERIFICATION.md) for what has actually been checked. A passing build does not replace a real-device walkthrough.
+The manual Pages deployment workflow runs formatting, analysis, tests and data checks
+before building. Publishing requires the repository/Pages settings and Neon trusted
+origin described in [HOSTING.md](docs/HOSTING.md).
+Actual results and remaining submission actions are recorded in
+[the final check](docs/FINAL_SUBMISSION_CHECK.md).
 
-## How it works
+## How the code works
 
-`lib/models/destination.dart` describes a destination and an attraction. `lib/data/destinations.dart` is the bundled sample list. `lib/state/travel_controller.dart` holds search text, the selected country/category, and saved destination IDs. `lib/screens/explorer_screen.dart` displays the current state and opens details using Flutter navigation. `lib/models/day_plan.dart` builds the timetable; `lib/screens/day_planner_screen.dart` collects and displays the inputs and stops.
+- `lib/models/destination.dart`: the fields for a city and its attractions.
+- `lib/data/destinations.dart`: bundled destination objects.
+- `lib/state/travel_controller.dart`: name/category/country filters, saved IDs and day drafts.
+- `lib/screens/explorer_screen.dart`: Home, Search and Saved, listening for controller changes.
+- `lib/models/destination_match.dart`: a pure Dart scoring function; sample profiles live in `lib/data/`.
+- `lib/models/day_plan.dart`: minute arithmetic; screens use the day-only mode with no arrival formalities.
+- `lib/services/local_store.dart`: local persistence adapters; whole trips use a separate storage key.
+- `lib/services/place_catalog.dart`: the public directory and bundled fallback, separate from personal state.
 
-When you tap a heart, the controller toggles an ID and calls `notifyListeners()`. Listening widgets rebuild from the same controller, so Home, Details, and Wishlist agree. Search and country conditions must both match. Activity choices decide which category opens after selecting a city. Filtering never removes a saved ID.
-
-Start with [Learn the app in five small steps](docs/EXPLAIN_TO_INTERVIEWER.md). Read [data](docs/DATA.md), [state](docs/STATE.md), and [UI](docs/UI.md) for more detail. [Agent tasks](docs/AGENT_TASKS.md) documents how work was divided and how to request a small follow-up safely.
-
-## Scope and limitations
-
-The public place directory is connected to Neon on its Free plan, with a bundled fallback. No user login, private API key or embedded maps SDK is required to use the app. See [database and hosting](docs/HOSTING.md). Wishlist IDs and one trip draft per destination are saved locally: browser localStorage on web and SharedPreferences on Android. Reopening in the same browser profile and origin restores them. Clearing site/app data removes them; there is no account sync. Android storage still needs a device test.
-
-Destination content combines curated samples with a few checked Hugging Face fields. See [data provenance and Kaggle status](docs/DATA_SOURCES.md). The original six destinations have offline photos; the four added cities load remote Commons photos. See [image credits](docs/IMAGE_CREDITS.md).
-
-The cloud directory has 24 curated listings across all ten cities; each city has a sourced stay and dining example, while Maps searches supplement less populated categories. Hotel and transport buttons open external searches; there are no live prices, ranked hotel recommendations, reservations, or guaranteed cheapest fares. Availability varies by location. The day planner uses an optional starting/return location and user-chosen transfer buffers. It does not include airport formalities or hotel check-in, optimise routes, or fetch hotel/attraction opening times. It rejects plans that extend past midnight. Unsaved edits are lost when you leave; saved day inputs restore from My day or Saved. Whole-trip drafts resume from My day → Whole trip plans.
-
-External links work through a small web helper and an Android platform bridge. Android still needs a device test; unsupported platforms offer a copyable URL. No extra package download is required.
+The controller calls `notifyListeners()` after a change. Widgets then rebuild from
+the same data. Search uses three AND conditions; filtering never deletes saved IDs.
+Read [the beginner explanation](docs/EXPLAIN_TO_INTERVIEWER.md),
+[search/matcher walkthrough](docs/SEARCH_AND_MATCHER.md), and
+[planning modes](docs/PLANNING_MODES.md).
 
 ## Screenshots and demo
 
-Captured from the running Flutter web app at a phone-sized viewport:
+Captured from the actual Flutter UI at a 390 × 844 mobile layout in an isolated demo session:
 
-![City-first Home](docs/screenshots/city-first-home.jpg)
-![City discovery](docs/screenshots/city-discovery.jpg)
-![One-day planner](docs/screenshots/city-plan.jpg)
+![Home with destination categories](docs/screenshots/final-home.png)
+![Search showing a deliberately mismatched category](docs/screenshots/final-search.png)
+![Smart matcher with explained results](docs/screenshots/final-matcher.png)
+![Generated day plan](docs/screenshots/final-day-plan.png)
 
-Demo video: record and add the publicly viewable Google Drive link before submission.
+A **2:50 demo** and a separate timed voice-over script are prepared in the workspace
+`outputs/demo/` folder. Add your own narration, upload the final copy to Google Drive,
+and add the real publicly viewable video link here before submitting.
+See [the demo guide](docs/DEMO.md) and [submission steps](docs/SUBMISSION.md).
 
-Follow the [2-3 minute demo checklist](docs/DEMO.md). The recruitment deadline is **22 October 2026, 11:59 PM IST**. Submit the public GitHub repository and publicly viewable Google Drive demo through the assignment form.
+## Data, limitations and development approach
 
-## Development approach
+The core destination catalogue works without an account or backend. The original
+six cities have bundled photos; the four added cities use remote photos with fallbacks.
+See [image credits](docs/IMAGE_CREDITS.md) and [data sources](docs/DATA_SOURCES.md).
+Some fields were checked against a Hugging Face dataset; a Kaggle import helper is
+included, but an actual Kaggle dataset has not been bundled or claimed as imported.
 
-Built with AI assistance in Codex using separate tasks for UI, data, search/wishlist logic, and tests/documentation, with a coordinating integration pass. The candidate should be able to explain every submitted feature and describe the remaining limitations honestly.
+There are no live bookings, fares, verified opening hours, cloud sync of personal
+trips, intercity route optimisation or live weather. Weather is an optional PDF
+enhancement and has not been implemented. Travel durations are user-chosen buffers;
+use Maps for real route information. The directory uses HTTPS with a short-lived
+guest token; no administrator/database password is embedded in the app.
 
-
-
-
-
-## Saved trips, pace and city discovery
-
-- Save favourite places and one editable trip draft per destination. Resume drafts from Wishlist.
-- Choose Relaxed, Balanced or Packed pace; visit lengths are 120, 90 or 60 minutes. Rest remains editable.
-- Choose any city on Explore, then Stays, Food, Adventure, Water parks, Shopping or Day plan. The earlier fixed Hyderabad demo is no longer the main flow.
-- Learn the flow in `docs/EXPLAIN_TO_INTERVIEWER.md`; the discovery flow and next improvements are in `docs/DISCOVERY.md`.
-
-For repeatable browser saving during development, run `./run-app.ps1 -Device web-server` in the VS Code terminal, then open `http://127.0.0.1:8767/` in your normal browser. Reuse the same address and browser profile. Flutter's automatically launched Chrome debug profile may be temporary; saving there is not a substitute for testing your regular browser. The existing Codex preview uses port 8766, a separate origin with separate saved data.
-
-## Hosting
-
-The database is connected; public web hosting is a separate step. A manual GitHub Pages deployment workflow is prepared. Read [HOSTING.md](docs/HOSTING.md) for repository setup, the Neon trusted-origin setting and verification. No public deployment has been made yet. This repository is private; pushing its source does not publish the app.
-
-## City-first update — 19 October 2026
-The app now opens a city category pop-up from each city photo, with citywide venue search, an Events discovery link and a profile screen. The palette uses near-black and charcoal with purple accents. See [the flow and login guide](docs/CITY_FIRST_AND_LOGIN.md) for implementation, testing and limitations. Web Google/email authentication is connected to Neon; completed account login still needs a user verification. Saved trips remain device-local.
-
-
-The latest version adds large activity tiles and a route with up to five outings. In a city's day planner, use **Choose more stops**, select or enter venues, reorder them, choose a visit duration and generate the timetable. Google login now completes its callback and was verified with a signed-in account. All 19 Flutter tests pass. See [the current flow and implementation guide](docs/CITY_FIRST_AND_LOGIN.md).
-
-
-## My day
-Collect outings, a stay and a meal while browsing each city. Reorder your picks in **My day**, then review them in the planner before saving a timetable. Picks persist on this device and can be reopened from Saved. See [the beginner code guide](docs/MY_DAY.md).
-
-![My day preview](docs/screenshots/my-day.jpg)
-
-
-## Latest navigation and My day refinements
-Home asks you to choose a city first, and starts with no activity selected. Activities stay disabled until a city is chosen. The saved-content tab is now named **Saved**.
-
-My day has a short introduction with details behind its info button. **Add to my day** opens a searchable picker limited to the current city, combining bundled sights and the Neon directory (with its offline fallback). Picks retain their directory or local sight ID. **Add a custom stop** remains an explicit fallback, labelled as an unverified location. The app provides per-stop Maps links and route-check links between consecutive outings. At five outings, it disables adding and explains how to make room.
-
-The current place catalog does not include verified coordinates. No straight-line-distance or road-time warning is generated from these names. Maps resolves the selected names and city; check the resolved locations and routes there.
-
-## Security design decision
-Flutter calls Neon's HTTPS Auth and Data APIs. It requests a short-lived anonymous guest token to read the public venue directory. The database restricts that guest role to read-only access using row-level security. No Postgres connection string, database password, Google client secret or administrator API key is embedded in the app. User sessions use browser-managed HTTP-only cookies. Saved cities, My day and trip drafts remain device-local, so logging in does not imply account sync.
-
-
-## UI decisions
-
-- Start with the same dark compass identity, followed by original bundled travel photos and clear pill controls.
-- Use Flutter's built-in fade/scale/slide animations and respect reduced-motion settings.
-- Keep setup optional, show only real directory matches, and leave saved timetables untouched.
-
-![Refreshed dark Home](docs/screenshots/ui-refresh-home-mobile.jpg)
-
-![Refreshed city guide](docs/screenshots/ui-refresh-guide.jpg)
-
-- Keep the original dark surfaces and purple/category accents for a consistent identity.
-- Choose a city before activities so every result has a clear city context.
-- Tap a large photo to select a city; use its arrow for the city guide and its heart to save.
-- Use Poppins headings and Lato body text, bundled locally so fonts work offline.
-- Use dark image gradients, rounded 24-pixel cards, readable text and 48-pixel controls.
-- Put Home, Saved, Search and My day in a floating bar so each is one tap away.
-- Keep My day explanations behind an info button and make the five-outing limit explicit.
-- Use the current-city venue picker with source IDs; custom stops remain clearly unverified.
-- Open Maps for route checks because the directory has no verified coordinates or road-time data.
-- Show named image placeholders; cached_network_image does not provide persistent image caching on web.
-
-UI refresh verification, changed files, limitations and the interview walkthrough: [UI refresh report](docs/UI_REFRESH_REPORT.md).
-
-Font support needs Flutter 3.35+ / Dart 3.9+. Keep `pubspec.lock` when installing this app. The lock selects a compatible Apple path-provider implementation to avoid a Windows native-assets build failure with space-containing SDK paths; no extra direct package was added.
-
-
-## Onboarding & preferences
-
-Every launch shows a dark native/web splash, then a short in-app compass animation (600 ms entrance, 600 ms hold, 400 ms exit). The next route fades and slides up over 350 ms. Reduced motion skips these animations. Local restoration has a three-second startup budget; the background session request is never awaited by the splash.
-
-First-time signed-in travellers see three photo pages, then optional interests, trip style and travel-company choices. Logged-out travellers see the existing login screen and can still choose **Explore as guest**. **Skip** completes the intro; **Skip for now** acknowledges preferences without requiring choices. Profile includes **Edit preferences** and **Replay intro**.
-
-Intro and preferences use separate `travel_explorer.experience.v1.<user ID>` keys through the existing LocalStore wrapper, falling back to a per-device key for guests. Only the last non-secret user ID is cached as an offline launch hint: it is not a credential and cannot authenticate an API request. Authentication remains controlled by the unchanged Neon session service. Existing saved-city and trip-draft storage is unchanged and remains device-local. A Google verifier callback goes through the existing login screen to avoid exchanging it twice.
-
-Selected interests appear first in Home's activity tiles. **Based on your interests** appears only when at least two existing directory records match the selected city and categories. It is simple category matching, not AI. Trip style suggests about 3/4/5 stops and 120/90/60-minute visits for Relaxed/Balanced/Packed new plans. Users can change pace and duration in the planner. Stored drafts keep their settings. Travel-company choice is saved as context, without claims about venue suitability. Budget and dietary questions are omitted because the venue model has no such fields.
-
-The three bundled onboarding JPEGs are each under 300 KB. Native splash configuration is in `flutter_native_splash.yaml`; regenerate with `dart run flutter_native_splash:create`. Keep the committed Android normal-window backgrounds dark after regeneration. Android 12+ resources and a dark web loader are included. iOS generation is disabled because this repository has no iOS project.
-
-Verified with 50 automated tests, the web release build and mobile browser checks. [Detailed checks, limitations, changed files and an interview explanation](docs/ONBOARDING_REPORT.md).
-
-![Mobile introduction](docs/screenshots/onboarding-mobile.jpg)
-
-
-## Plan a day or plan whole trip
-
-Open **Plan your visit** from a city guide. The two mode cards match the existing dark mobile design:
-
-- **Plan a day:** start wherever you are. The starting/return location is optional and defaults to the city centre; enter an exact place for better Maps directions. Choose start time, outings, a meal, pace and transfer/break buffers. There are no airport/station or room-access fields.
-- **Plan whole trip:** choose 2–7 days and a start date for the selected city. Use **Edit day** to create each timetable, then **Save this day**. **Save whole trip** also saves date and day-count changes. **Copy whole trip** includes each date and saved timetable, marking unfinished days clearly.
-- Resume saved trips from **My day → Whole trip plans**. One whole-trip draft is kept per city on this device, in a separate storage key. Existing one-day drafts stay separate. Whole trips currently cover one city each; intercity transfers and booking are not included.
-
-The local day builder skips arrival/check-in blocks. Legacy helper calls retain their old default for compatibility, while the app uses the new local-day mode. Existing draft fields still load; the timetable is rebuilt using the new flow.
-
-Verified with **58 tests**, a web build and the core planner checks. [Implementation, limits and verification](docs/PLANNING_MODES.md).
+Built with AI assistance. The code keeps data, state and screens separate so the
+candidate can explain and modify the implementation. Web behaviour and automated
+checks are documented; native Android and physical-phone testing remain separate.

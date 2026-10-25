@@ -10,10 +10,12 @@ extension type _Response(JSObject _) implements JSObject {
   external JSPromise<JSString> text();
 }
 Future<String> getText(String url, Map<String, String> headers) async {
-  final response =
-      await _fetch(url.toJS, _Options(headers: headers.jsify() as JSObject))
-          .toDart;
-  if (response.status != 200)
+  final response = await _fetch(
+    url.toJS,
+    _Options(headers: headers.jsify() as JSObject),
+  ).toDart;
+  if (response.status != 200) {
     throw StateError('Catalog HTTP ${response.status}');
+  }
   return (await response.text().toDart).toDart;
 }

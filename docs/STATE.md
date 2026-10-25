@@ -13,6 +13,16 @@ whether the name contains the search. A destination must also belong to the
 selected category. A `null` category means all categories. Category matching is
 exact, so the UI should use the category labels provided by the data.
 
+Country must also match when selected. The Search tab exposes all three inputs;
+`clearFilters()` resets them together. Home and Saved do not use the filtered list.
+The Search controls are in `destination_search_controls.dart`.
+
+Smart Destination Matcher is a separate, session-only feature. It ranks all cities
+by travel type, sample budget style and sample visit length using one point per
+matching preference. It shares saved destination IDs with this controller but
+does not change search text, country, stored trip drafts or onboarding preferences.
+See [the beginner walkthrough](SEARCH_AND_MATCHER.md) for the scoring rules.
+
 `toggleWishlist(id)` saves an unsaved place or removes a saved one. A set of IDs
 prevents duplicate saves. Unknown IDs are ignored. The wishlist is independent
 of the current search and category, so filtering never deletes a saved place.

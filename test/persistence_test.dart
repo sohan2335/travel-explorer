@@ -6,17 +6,18 @@ import 'package:travel_explorer/services/local_store.dart';
 import 'package:travel_explorer/state/travel_controller.dart';
 
 const draft = TripDraft(
-    destinationId: 'goa',
-    origin: 'Station',
-    hotel: 'Hotel',
-    arrivalMinutes: 540,
-    hotelReadyMinutes: 840,
-    restMinutes: 90,
-    travelMinutes: 60,
-    mode: 'transit',
-    attraction: 'Palolem Beach',
-    pace: 'Relaxed',
-    hasPlan: true);
+  destinationId: 'goa',
+  origin: 'Station',
+  hotel: 'Hotel',
+  arrivalMinutes: 540,
+  hotelReadyMinutes: 840,
+  restMinutes: 90,
+  travelMinutes: 60,
+  mode: 'transit',
+  attraction: 'Palolem Beach',
+  pace: 'Relaxed',
+  hasPlan: true,
+);
 
 class FailingStore implements LocalStore {
   @override
@@ -34,7 +35,7 @@ void main() {
       ...draft.toJson(),
       'attraction': 'Custom main outing',
       'restaurant': 'Sample cafe',
-      'visitMinutes': 240
+      'visitMinutes': 240,
     });
     expect(await first.saveDraft(custom), isTrue);
     final next = TravelController(destinations, store: store);
@@ -86,7 +87,7 @@ void main() {
     store.values[TravelController.wishlistKey] = '["goa","missing-city"]';
     store.values[TravelController.draftsKey] = jsonEncode({
       'goa': draft.toJson(),
-      'broken': {'version': 99}
+      'broken': {'version': 99},
     });
     final controller = TravelController(destinations, store: store);
     await controller.restore();

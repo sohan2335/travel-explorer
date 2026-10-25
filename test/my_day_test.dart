@@ -5,25 +5,32 @@ import 'package:travel_explorer/state/travel_controller.dart';
 
 void main() {
   test(
-      'directory IDs persist, attach to old name picks and disappear on removal',
-      () async {
-    final store = MemoryStore();
-    final c = TravelController(destinations, store: store);
-    await c.addToMyDay('goa', 'Fort Aguada');
-    await c.addToMyDay('goa', 'fort aguada', placeId: 'goa:sight:Fort Aguada');
-    await c.addToMyDay('goa', 'Mall', placeId: 'catalog:mall');
-    await c.moveDayStop('goa', 1, -1);
-    final restored = TravelController(destinations, store: store);
-    await restored.restore();
-    expect(restored.myDayFor('goa').stops, ['Mall', 'Fort Aguada']);
-    expect(restored.myDayFor('goa').placeIds['Fort Aguada'],
-        'goa:sight:Fort Aguada');
-    await restored.removeFromMyDay('goa', 'Mall');
-    expect(restored.myDayFor('goa').placeIds.containsKey('Mall'), isFalse);
-    expect(restored.myDayFor('goa').placeIds.length, 1);
-    c.dispose();
-    restored.dispose();
-  });
+    'directory IDs persist, attach to old name picks and disappear on removal',
+    () async {
+      final store = MemoryStore();
+      final c = TravelController(destinations, store: store);
+      await c.addToMyDay('goa', 'Fort Aguada');
+      await c.addToMyDay(
+        'goa',
+        'fort aguada',
+        placeId: 'goa:sight:Fort Aguada',
+      );
+      await c.addToMyDay('goa', 'Mall', placeId: 'catalog:mall');
+      await c.moveDayStop('goa', 1, -1);
+      final restored = TravelController(destinations, store: store);
+      await restored.restore();
+      expect(restored.myDayFor('goa').stops, ['Mall', 'Fort Aguada']);
+      expect(
+        restored.myDayFor('goa').placeIds['Fort Aguada'],
+        'goa:sight:Fort Aguada',
+      );
+      await restored.removeFromMyDay('goa', 'Mall');
+      expect(restored.myDayFor('goa').placeIds.containsKey('Mall'), isFalse);
+      expect(restored.myDayFor('goa').placeIds.length, 1);
+      c.dispose();
+      restored.dispose();
+    },
+  );
 
   test('picks accumulate by city, deduplicate and restore in order', () async {
     final store = MemoryStore();
@@ -57,22 +64,24 @@ void main() {
     expect(c.myDayFor('goa').stops, ['Park']);
     c.dispose();
   });
-  test('five-outing limit, invalid inputs and reorder bounds are enforced',
-      () async {
-    final c = TravelController(destinations);
-    for (var i = 0; i < 5; i++) {
-      expect(await c.addToMyDay('goa', 'Stop $i'), isTrue);
-    }
-    expect(await c.addToMyDay('goa', 'Sixth'), isFalse);
-    expect(await c.addToMyDay('missing', 'Stop'), isFalse);
-    expect(await c.addToMyDay('goa', ' '), isFalse);
-    expect(await c.moveDayStop('goa', 0, -1), isFalse);
-    expect(await c.moveDayStop('goa', 4, 1), isFalse);
-    await c.removeFromMyDay('goa', 'Stop 2');
-    expect(await c.addToMyDay('goa', 'New stop'), isTrue);
-    expect(c.myDayFor('goa').stops.last, 'New stop');
-    c.dispose();
-  });
+  test(
+    'five-outing limit, invalid inputs and reorder bounds are enforced',
+    () async {
+      final c = TravelController(destinations);
+      for (var i = 0; i < 5; i++) {
+        expect(await c.addToMyDay('goa', 'Stop $i'), isTrue);
+      }
+      expect(await c.addToMyDay('goa', 'Sixth'), isFalse);
+      expect(await c.addToMyDay('missing', 'Stop'), isFalse);
+      expect(await c.addToMyDay('goa', ' '), isFalse);
+      expect(await c.moveDayStop('goa', 0, -1), isFalse);
+      expect(await c.moveDayStop('goa', 4, 1), isFalse);
+      await c.removeFromMyDay('goa', 'Stop 2');
+      expect(await c.addToMyDay('goa', 'New stop'), isTrue);
+      expect(c.myDayFor('goa').stops.last, 'New stop');
+      c.dispose();
+    },
+  );
   test('bad city picks do not prevent other cities from restoring', () async {
     final store = MemoryStore();
     store.values[TravelController.myDayKey] =

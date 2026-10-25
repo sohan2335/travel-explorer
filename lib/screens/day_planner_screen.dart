@@ -12,15 +12,19 @@ import '../widgets/planner_mode_switch.dart';
 import 'whole_trip_screen.dart';
 
 class DayPlannerScreen extends StatefulWidget {
-  const DayPlannerScreen(
-      {super.key,
-      required this.destination,
-      required this.controller,
-      this.initialStops,
-      this.initialHotel,
-      this.initialAttraction,
-      this.initialRestaurant,
-      this.initialVisitMinutes, this.dayDraft, this.dayNumber, this.onSaveDay});
+  const DayPlannerScreen({
+    super.key,
+    required this.destination,
+    required this.controller,
+    this.initialStops,
+    this.initialHotel,
+    this.initialAttraction,
+    this.initialRestaurant,
+    this.initialVisitMinutes,
+    this.dayDraft,
+    this.dayNumber,
+    this.onSaveDay,
+  });
   final List<String>? initialStops;
   final Destination destination;
   final String? initialHotel, initialAttraction, initialRestaurant;
@@ -54,8 +58,13 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
   void initState() {
     super.initState();
     _attraction = widget.destination.attractions.first.name;
-    final draft = widget.onSaveDay != null ? widget.dayDraft : widget.controller.draftFor(widget.destination.id);
-    final style = context.getInheritedWidgetOfExactType<ExperienceScope>()?.controller.tripStyle;
+    final draft = widget.onSaveDay != null
+        ? widget.dayDraft
+        : widget.controller.draftFor(widget.destination.id);
+    final style = context
+        .getInheritedWidgetOfExactType<ExperienceScope>()
+        ?.controller
+        .tripStyle;
     if (draft == null && style != null) {
       _pace = style;
       _rest = restMinutesByPace[style]!;
@@ -65,7 +74,9 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
       _hotel.text = draft.hotel;
       _restaurant.text = draft.restaurant;
       _arrival = TimeOfDay(
-          hour: draft.arrivalMinutes ~/ 60, minute: draft.arrivalMinutes % 60);
+        hour: draft.arrivalMinutes ~/ 60,
+        minute: draft.arrivalMinutes % 60,
+      );
       _rest = draft.restMinutes;
       _visit = draft.visitMinutes == 0 ? null : draft.visitMinutes;
       _travel = draft.travelMinutes;
@@ -96,8 +107,9 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     }
     if (widget.initialAttraction != null) {
       _attraction = widget.initialAttraction!;
-      _additionalPlaces
-          .removeWhere((p) => p.toLowerCase() == _attraction.toLowerCase());
+      _additionalPlaces.removeWhere(
+        (p) => p.toLowerCase() == _attraction.toLowerCase(),
+      );
       _clearPlan();
     }
     if (widget.initialRestaurant != null) {
@@ -106,125 +118,152 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     }
   }
 
-  String get _startingPoint => _hotel.text.trim().isEmpty ? '${widget.destination.name} city centre' : _hotel.text.trim();
+  String get _startingPoint => _hotel.text.trim().isEmpty
+      ? '${widget.destination.name} city centre'
+      : _hotel.text.trim();
 
   List<DayPlanStop> _calculatePlan() => buildDayPlan(
-        arrivalMinutes: _arrival.hour * 60 + _arrival.minute,
-        origin: _startingPoint,
-        hotel: _startingPoint,
-        attraction: _attraction,
-        restMinutes: _rest,
-        travelMinutes: _travel,
-        hotelReadyMinutes: 0,
-        pace: _pace,
-        mealPlace: _restaurant.text.trim(),
-        visitMinutesOverride: _visit,
-        additionalPlaces: _additionalPlaces,
-        includeArrival: false,
-      );
+    arrivalMinutes: _arrival.hour * 60 + _arrival.minute,
+    origin: _startingPoint,
+    hotel: _startingPoint,
+    attraction: _attraction,
+    restMinutes: _rest,
+    travelMinutes: _travel,
+    hotelReadyMinutes: 0,
+    pace: _pace,
+    mealPlace: _restaurant.text.trim(),
+    visitMinutesOverride: _visit,
+    additionalPlaces: _additionalPlaces,
+    includeArrival: false,
+  );
 
   Future<void> _pickStops() async {
     final catalog = PlaceCatalog.load();
     final selected = List<String>.of(_additionalPlaces);
     final custom = TextEditingController();
     await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (sheetContext) => StatefulBuilder(
-            builder: (context, update) => Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
-                  child: SizedBox(
-                      height: MediaQuery.sizeOf(context).height * .7,
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Add stops in ${widget.destination.name}',
-                                style: Theme.of(context).textTheme.titleLarge),
-                            const Text(
-                                'Select up to four extra places. Selected order becomes your route.'),
-                            Expanded(
-                                child: FutureBuilder<CatalogResult>(
-                                    future: catalog,
-                                    builder: (context, snapshot) {
-                                      final names = <String>{
-                                        ...widget.destination.attractions
-                                            .map((a) => a.name),
-                                        ...?snapshot.data?.places
-                                            .where((p) =>
-                                                p.cityId ==
-                                                    widget.destination.id &&
-                                                p.kind != 'hotel')
-                                            .map((p) => p.name),
-                                        ...selected
-                                      }
-                                          .where((p) =>
-                                              p.toLowerCase() !=
-                                              _attraction.toLowerCase())
-                                          .toList();
-                                      return ListView(children: [
-                                        if (snapshot.connectionState !=
-                                            ConnectionState.done)
-                                          const LinearProgressIndicator(),
-                                        for (final name in names)
-                                          CheckboxListTile(
-                                              contentPadding: EdgeInsets.zero,
-                                              title: Text(name),
-                                              value: selected.contains(name),
-                                              onChanged: selected.length >= 4 &&
-                                                      !selected.contains(name)
-                                                  ? null
-                                                  : (checked) => update(() {
-                                                        if (checked == true) {
-                                                          selected.add(name);
-                                                        } else {
-                                                          selected.remove(name);
-                                                        }
-                                                      })),
-                                      ]);
-                                    })),
-                            Row(children: [
-                              Expanded(
-                                  child: TextField(
-                                      controller: custom,
-                                      maxLength: 500,
-                                      decoration: const InputDecoration(
-                                          labelText:
-                                              'Other venue or event location',
-                                          counterText: ''))),
-                              IconButton(
-                                  tooltip: 'Add entered place',
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () {
-                                    final name = custom.text.trim();
-                                    if (name.isNotEmpty &&
-                                        name.toLowerCase() !=
-                                            _attraction.toLowerCase() &&
-                                        !selected.any((p) =>
-                                            p.toLowerCase() ==
-                                            name.toLowerCase()) &&
-                                        selected.length < 4) {
-                                      update(() {
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, update) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.viewInsetsOf(context).bottom + 20,
+          ),
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * .7,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Add stops in ${widget.destination.name}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const Text(
+                  'Select up to four extra places. Selected order becomes your route.',
+                ),
+                Expanded(
+                  child: FutureBuilder<CatalogResult>(
+                    future: catalog,
+                    builder: (context, snapshot) {
+                      final names =
+                          <String>{
+                                ...widget.destination.attractions.map(
+                                  (a) => a.name,
+                                ),
+                                ...?snapshot.data?.places
+                                    .where(
+                                      (p) =>
+                                          p.cityId == widget.destination.id &&
+                                          p.kind != 'hotel',
+                                    )
+                                    .map((p) => p.name),
+                                ...selected,
+                              }
+                              .where(
+                                (p) =>
+                                    p.toLowerCase() !=
+                                    _attraction.toLowerCase(),
+                              )
+                              .toList();
+                      return ListView(
+                        children: [
+                          if (snapshot.connectionState != ConnectionState.done)
+                            const LinearProgressIndicator(),
+                          for (final name in names)
+                            CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(name),
+                              value: selected.contains(name),
+                              onChanged:
+                                  selected.length >= 4 &&
+                                      !selected.contains(name)
+                                  ? null
+                                  : (checked) => update(() {
+                                      if (checked == true) {
                                         selected.add(name);
-                                        custom.clear();
-                                      });
-                                    }
-                                  })
-                            ]),
-                            const SizedBox(height: 12),
-                            FilledButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _additionalPlaces = selected;
-                                    _clearPlan();
-                                  });
-                                  Navigator.pop(sheetContext);
-                                },
-                                child:
-                                    Text('Use ${selected.length} extra stops')),
-                          ])),
-                )));
+                                      } else {
+                                        selected.remove(name);
+                                      }
+                                    }),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: custom,
+                        maxLength: 500,
+                        decoration: const InputDecoration(
+                          labelText: 'Other venue or event location',
+                          counterText: '',
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Add entered place',
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        final name = custom.text.trim();
+                        if (name.isNotEmpty &&
+                            name.toLowerCase() != _attraction.toLowerCase() &&
+                            !selected.any(
+                              (p) => p.toLowerCase() == name.toLowerCase(),
+                            ) &&
+                            selected.length < 4) {
+                          update(() {
+                            selected.add(name);
+                            custom.clear();
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () {
+                    setState(() {
+                      _additionalPlaces = selected;
+                      _clearPlan();
+                    });
+                    Navigator.pop(sheetContext);
+                  },
+                  child: Text('Use ${selected.length} extra stops'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
     // Let the sheet finish its closing animation before disposing its text field.
     await Future<void>.delayed(const Duration(milliseconds: 350));
     custom.dispose();
@@ -250,15 +289,23 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
       hasPlan: _plan != null,
     );
     final success = widget.onSaveDay != null
-      ? await widget.onSaveDay!(draft) : await widget.controller.saveDraft(draft);
+        ? await widget.onSaveDay!(draft)
+        : await widget.controller.saveDraft(draft);
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(SnackBar(
-          content: Text(success
-              ? (widget.onSaveDay != null ? 'Day ${widget.dayNumber} saved in whole trip' : 'Trip draft saved on this device')
-              : 'Could not save on this device. Copy the plan to keep it.')));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? (widget.onSaveDay != null
+                      ? 'Day ${widget.dayNumber} saved in whole trip'
+                      : 'Trip draft saved on this device')
+                : 'Could not save on this device. Copy the plan to keep it.',
+          ),
+        ),
+      );
   }
 
   Future<void> _deleteDraft() async {
@@ -268,28 +315,39 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     setState(() {});
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(SnackBar(
-        content: Text(success
-            ? 'Saved draft removed; current inputs are still here'
-            : 'Saved draft could not be removed from device storage'),
-        action: success && previous != null
-            ? SnackBarAction(
-                label: 'Undo',
-                onPressed: () async {
-                  final restored = await widget.controller.saveDraft(previous);
-                  if (mounted) {
-                    setState(() {});
-                    if (!restored) {
-                      ScaffoldMessenger.of(context)
-                        ..clearSnackBars()
-                        ..showSnackBar(const SnackBar(
-                            content: Text(
-                                'Could not restore the saved draft on this device')));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Saved draft removed; current inputs are still here'
+                : 'Saved draft could not be removed from device storage',
+          ),
+          action: success && previous != null
+              ? SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () async {
+                    final restored = await widget.controller.saveDraft(
+                      previous,
+                    );
+                    if (mounted) {
+                      setState(() {});
+                      if (!restored) {
+                        ScaffoldMessenger.of(context)
+                          ..clearSnackBars()
+                          ..showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Could not restore the saved draft on this device',
+                              ),
+                            ),
+                          );
+                      }
                     }
-                  }
-                })
-            : null,
-      ));
+                  },
+                )
+              : null,
+        ),
+      );
   }
 
   @override
@@ -318,9 +376,13 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     if (_plan != null) {
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
-        ..showSnackBar(const SnackBar(
+        ..showSnackBar(
+          const SnackBar(
             content: Text(
-                'Your day plan is ready below. Save the draft to keep it.')));
+              'Your day plan is ready below. Save the draft to keep it.',
+            ),
+          ),
+        );
     }
   }
 
@@ -329,334 +391,434 @@ class _DayPlannerScreenState extends State<DayPlannerScreen> {
     final place = widget.destination;
     final city = '${place.name}, ${place.country}';
     return Scaffold(
-      appBar: AppBar(title: Text(widget.onSaveDay != null ? 'Day ${widget.dayNumber} · ${place.name}' : 'Plan in ${place.name}', overflow: TextOverflow.ellipsis)),
+      appBar: AppBar(
+        title: Text(
+          widget.onSaveDay != null
+              ? 'Day ${widget.dayNumber} · ${place.name}'
+              : 'Plan in ${place.name}',
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: Form(
-                  key: _form,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.onSaveDay == null) ...[
-                          PlannerModeSwitch(onDay: () {}, onTrip: () => Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => WholeTripScreen(destination: place,
-                              controller: widget.controller, fromDayPlanner: true)))),
-                          const SizedBox(height: 24),
-                        ],
-                        Text('Make room for a little adventure.',
-                            style: Theme.of(context).textTheme.headlineMedium),
-                        const SizedBox(height: 12),
-                        const Text(
-                            'Start wherever you are and choose up to five outings. Leave the starting point blank to use the city centre. Times are editable buffers; check real routes in Maps.'),
-                        if (widget.controller.storageMessage != null)
-                          Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Text(widget.controller.storageMessage!)),
-                        const SizedBox(height: 24),
-                        TextFormField(
-                            controller: _hotel,
-                            maxLength: 500,
-                            onChanged: (_) => setState(_clearPlan),
-                            decoration: const InputDecoration(
-                                labelText: 'Start / return location (optional)',
-                                hintText:
-                                    'Home, hotel or a place in the city')),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                            controller: _restaurant,
-                            maxLength: 500,
-                            onChanged: (_) => setState(_clearPlan),
-                            decoration: const InputDecoration(
-                                labelText: 'Restaurant / meal stop (optional)',
-                                hintText:
-                                    'Choose nearby food, or leave blank')),
-                        const SizedBox(height: 8),
-                        TravelLinkButton(
-                            label: 'Find a hotel near the attraction',
-                            icon: Icons.hotel_outlined,
-                            url: hotelSearch(_attraction, city, 'Budget')),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                            icon: const Icon(Icons.schedule),
-                            label: Text(
-                                'Start time: ${clockTime(_arrival.hour * 60 + _arrival.minute)}'),
-                            onPressed: () async {
-                              final time = await showTimePicker(
-                                  context: context, initialTime: _arrival);
-                              if (time != null && mounted) {
-                                setState(() {
-                                  _arrival = time;
-                                  _clearPlan();
-                                });
-                              }
-                            }),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                            initialValue: _attraction,
-                            isExpanded: true,
-                            decoration: const InputDecoration(
-                                labelText: 'Your main attraction'),
-                            items: {
-                              ...place.attractions.map((a) => a.name),
-                              _attraction
-                            }
-                                .toList()
-                                .map((item) => DropdownMenuItem(
-                                    value: item, child: Text(item)))
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _attraction = value;
-                                  _additionalPlaces.removeWhere((p) =>
-                                      p.toLowerCase() == value.toLowerCase());
-                                  _clearPlan();
-                                });
-                              }
-                            }),
-                        const SizedBox(height: 16),
-                        Text('More stops in your day',
-                            style: Theme.of(context).textTheme.titleMedium),
-                        const Text(
-                            'Add malls, sights, parks or an event venue. Each outing uses the visit duration below and gets a travel buffer. Check event times yourself.'),
-                        for (var index = 0;
-                            index < _additionalPlaces.length;
-                            index++)
-                          ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Text('${index + 2}'),
-                              title: Text(_additionalPlaces[index]),
-                              trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                        tooltip: 'Move stop earlier',
-                                        onPressed: index == 0
-                                            ? null
-                                            : () => setState(() {
-                                                  final name = _additionalPlaces
-                                                      .removeAt(index);
-                                                  _additionalPlaces.insert(
-                                                      index - 1, name);
-                                                  _clearPlan();
-                                                }),
-                                        icon: const Icon(Icons.arrow_upward)),
-                                    IconButton(
-                                        tooltip: 'Remove stop',
-                                        onPressed: () => setState(() {
-                                              _additionalPlaces.removeAt(index);
-                                              _clearPlan();
-                                            }),
-                                        icon: const Icon(Icons.close)),
-                                  ])),
-                        OutlinedButton.icon(
-                            onPressed: _pickStops,
-                            icon: const Icon(Icons.add_location_alt_outlined),
-                            label: const Text('Choose more stops')),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                            initialValue: _mode,
-                            isExpanded: true,
-                            decoration: const InputDecoration(
-                                labelText: 'Transport preference'),
-                            items: transportModes.entries
-                                .map((entry) => DropdownMenuItem(
-                                    value: entry.key, child: Text(entry.value)))
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _mode = value;
-                                  _clearPlan();
-                                });
-                              }
-                            }),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          initialValue: _pace,
-                          decoration: const InputDecoration(
-                              labelText: 'Sightseeing pace'),
-                          items: visitMinutesByPace.keys
-                              .map((pace) => DropdownMenuItem(
-                                  value: pace, child: Text(pace)))
-                              .toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() {
-                                _pace = value;
-                                _visit = null;
-                                _rest = restMinutesByPace[value]!;
-                                _clearPlan();
-                              });
-                            }
-                          },
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Form(
+              key: _form,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.onSaveDay == null) ...[
+                    PlannerModeSwitch(
+                      onDay: () {},
+                      onTrip: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WholeTripScreen(
+                            destination: place,
+                            controller: widget.controller,
+                            fromDayPlanner: true,
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                            '$_pace defaults to ${visitMinutesByPace[_pace]} minutes sightseeing. Adjust visit and rest below; parks often need several hours.'),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<int>(
-                            key: ValueKey(
-                                'visit-${_visit ?? visitMinutesByPace[_pace]}'),
-                            initialValue: _visit ?? visitMinutesByPace[_pace],
-                            decoration: const InputDecoration(
-                                labelText: 'Visit duration per outing'),
-                            items: const [30, 60, 90, 120, 180, 240, 360, 480]
-                                .map((m) => DropdownMenuItem(
-                                    value: m, child: Text('$m minutes')))
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _visit = value;
-                                  _clearPlan();
-                                });
-                              }
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  Text(
+                    'Make room for a little adventure.',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Start wherever you are and choose up to five outings. Leave the starting point blank to use the city centre. Times are editable buffers; check real routes in Maps.',
+                  ),
+                  if (widget.controller.storageMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(widget.controller.storageMessage!),
+                    ),
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _hotel,
+                    maxLength: 500,
+                    onChanged: (_) => setState(_clearPlan),
+                    decoration: const InputDecoration(
+                      labelText: 'Start / return location (optional)',
+                      hintText: 'Home, hotel or a place in the city',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _restaurant,
+                    maxLength: 500,
+                    onChanged: (_) => setState(_clearPlan),
+                    decoration: const InputDecoration(
+                      labelText: 'Restaurant / meal stop (optional)',
+                      hintText: 'Choose nearby food, or leave blank',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TravelLinkButton(
+                    label: 'Find a hotel near the attraction',
+                    icon: Icons.hotel_outlined,
+                    url: hotelSearch(_attraction, city, 'Budget'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.schedule),
+                    label: Text(
+                      'Start time: ${clockTime(_arrival.hour * 60 + _arrival.minute)}',
+                    ),
+                    onPressed: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: _arrival,
+                      );
+                      if (time != null && mounted) {
+                        setState(() {
+                          _arrival = time;
+                          _clearPlan();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _attraction,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Your main attraction',
+                    ),
+                    items:
+                        {...place.attractions.map((a) => a.name), _attraction}
+                            .toList()
+                            .map(
+                              (item) => DropdownMenuItem(
+                                value: item,
+                                child: Text(item),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _attraction = value;
+                          _additionalPlaces.removeWhere(
+                            (p) => p.toLowerCase() == value.toLowerCase(),
+                          );
+                          _clearPlan();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'More stops in your day',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const Text(
+                    'Add malls, sights, parks or an event venue. Each outing uses the visit duration below and gets a travel buffer. Check event times yourself.',
+                  ),
+                  for (var index = 0; index < _additionalPlaces.length; index++)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Text('${index + 2}'),
+                      title: Text(_additionalPlaces[index]),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Move stop earlier',
+                            onPressed: index == 0
+                                ? null
+                                : () => setState(() {
+                                    final name = _additionalPlaces.removeAt(
+                                      index,
+                                    );
+                                    _additionalPlaces.insert(index - 1, name);
+                                    _clearPlan();
+                                  }),
+                            icon: const Icon(Icons.arrow_upward),
+                          ),
+                          IconButton(
+                            tooltip: 'Remove stop',
+                            onPressed: () => setState(() {
+                              _additionalPlaces.removeAt(index);
+                              _clearPlan();
                             }),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<int>(
-                            key: ValueKey('rest-$_rest'),
-                            initialValue: _rest,
-                            decoration:
-                                const InputDecoration(labelText: 'Break before exploring'),
-                            items: const [0, 30, 60, 90, 120, 180]
-                                .map((minutes) => DropdownMenuItem(
-                                    value: minutes,
-                                    child: Text('$minutes minutes')))
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _rest = value;
-                                  _clearPlan();
-                                });
-                              }
-                            }),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<int>(
-                            initialValue: _travel,
-                            decoration: const InputDecoration(
-                                labelText: 'Buffer for each transfer'),
-                            items: const [15, 30, 60, 90, 120, 180]
-                                .map((minutes) => DropdownMenuItem(
-                                    value: minutes,
-                                    child: Text('$minutes minutes')))
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _travel = value;
-                                  _clearPlan();
-                                });
-                              }
-                            }),
-                        const SizedBox(height: 12),
-                        const Text(
-                            'Public transport is the starting preference for a budget-minded plan. Compare actual fares and routes before choosing. Increase the transfer buffer for distant places.'),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.icon(
-                                onPressed: _generate,
-                                icon: const Icon(Icons.auto_stories_outlined),
-                                label: const Text('Create my day plan'))),
-                        const SizedBox(height: 8),
-                        Wrap(spacing: 8, children: [
-                          OutlinedButton.icon(
-                              onPressed: _saving ? null : _saveDraft,
-                              icon: const Icon(Icons.save_outlined),
-                              label: Text(
-                                  _saving ? 'Saving...' : widget.onSaveDay != null ? 'Save this day' : 'Save trip draft')),
-                          if (widget.onSaveDay == null && widget.controller.draftFor(place.id) != null)
-                            TextButton.icon(
-                                onPressed: _saving ? null : _deleteDraft,
-                                icon: const Icon(Icons.delete_outline),
-                                label: const Text('Delete saved draft')),
-                        ]),
-                        const Text(
-                            'One draft per destination. Saving replaces that destination\'s previous draft. Device/browser data can be cleared in settings.'),
-                        if (_error != null)
-                          Padding(
-                              padding: const EdgeInsets.only(top: 16),
-                              child: Text(_error!,
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .error))),
-                        if (_plan != null) ...[
-                          const SizedBox(height: 28),
-                          Text('Your day, at a glance',
-                              style: Theme.of(context).textTheme.headlineSmall),
-                          const SizedBox(height: 16),
-                          for (final stop in _plan!)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Card(
-                                  child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(stop.timeRange,
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .secondary,
-                                              fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 8),
-                                      Text(stop.title,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium),
-                                      const SizedBox(height: 6),
-                                      Text(stop.note),
-                                      if (stop.destination != null)
-                                        TravelLinkButton(
-                                            label: 'Check this route',
-                                            icon: Icons.directions_outlined,
-                                            url: directions(
-                                                origin: '${stop.origin}, $city',
-                                                destination:
-                                                    '${stop.destination}, $city',
-                                                mode: _mode)),
-                                      if (stop.title == 'Meal & a break')
-                                        TravelLinkButton(
-                                            label: 'Find nearby food',
-                                            icon: Icons.restaurant_outlined,
-                                            url: mapSearch(_restaurant.text
-                                                    .trim()
-                                                    .isEmpty
-                                                ? 'restaurants near ${_additionalPlaces.isEmpty ? _attraction : _additionalPlaces.last}, $city'
-                                                : '${_restaurant.text.trim()}, $city')),
-                                    ]),
-                              )),
-                            ),
-                          OutlinedButton.icon(
-                              icon: const Icon(Icons.copy),
-                              label: const Text('Copy my day plan'),
-                              onPressed: () async {
-                                final text =
-                                    'One day in ${place.name}\nPace: $_pace\nMeal: ${_restaurant.text.trim().isEmpty ? 'Choose nearby' : _restaurant.text.trim()}\nTransport: ${transportModes[_mode]}\nDraft timings - verify routes, opening hours and venue hours.\n\n${_plan!.map((stop) => '${stop.timeRange} ${stop.title}\n${stop.note}').join('\n\n')}';
-                                await Clipboard.setData(
-                                    ClipboardData(text: text));
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context)
-                                    ..clearSnackBars()
-                                    ..showSnackBar(const SnackBar(
-                                        content: Text('Day plan copied')));
-                                }
-                              }),
-                          const SizedBox(height: 12),
-                          Text(
-                              widget.onSaveDay != null ? 'Save this day to keep it in your whole trip. Unsaved edits are lost when you leave.' : 'Use Save trip draft to resume here later, or Copy my day plan to keep a text version. Unsaved edits are lost when you leave.'),
+                            icon: const Icon(Icons.close),
+                          ),
                         ],
-                      ])),
+                      ),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: _pickStops,
+                    icon: const Icon(Icons.add_location_alt_outlined),
+                    label: const Text('Choose more stops'),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _mode,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Transport preference',
+                    ),
+                    items: transportModes.entries
+                        .map(
+                          (entry) => DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _mode = value;
+                          _clearPlan();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _pace,
+                    decoration: const InputDecoration(
+                      labelText: 'Sightseeing pace',
+                    ),
+                    items: visitMinutesByPace.keys
+                        .map(
+                          (pace) =>
+                              DropdownMenuItem(value: pace, child: Text(pace)),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _pace = value;
+                          _visit = null;
+                          _rest = restMinutesByPace[value]!;
+                          _clearPlan();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$_pace defaults to ${visitMinutesByPace[_pace]} minutes sightseeing. Adjust visit and rest below; parks often need several hours.',
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    key: ValueKey(
+                      'visit-${_visit ?? visitMinutesByPace[_pace]}',
+                    ),
+                    initialValue: _visit ?? visitMinutesByPace[_pace],
+                    decoration: const InputDecoration(
+                      labelText: 'Visit duration per outing',
+                    ),
+                    items: const [30, 60, 90, 120, 180, 240, 360, 480]
+                        .map(
+                          (m) => DropdownMenuItem(
+                            value: m,
+                            child: Text('$m minutes'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _visit = value;
+                          _clearPlan();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    key: ValueKey('rest-$_rest'),
+                    initialValue: _rest,
+                    decoration: const InputDecoration(
+                      labelText: 'Break before exploring',
+                    ),
+                    items: const [0, 30, 60, 90, 120, 180]
+                        .map(
+                          (minutes) => DropdownMenuItem(
+                            value: minutes,
+                            child: Text('$minutes minutes'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _rest = value;
+                          _clearPlan();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    initialValue: _travel,
+                    decoration: const InputDecoration(
+                      labelText: 'Buffer for each transfer',
+                    ),
+                    items: const [15, 30, 60, 90, 120, 180]
+                        .map(
+                          (minutes) => DropdownMenuItem(
+                            value: minutes,
+                            child: Text('$minutes minutes'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _travel = value;
+                          _clearPlan();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Public transport is the starting preference for a budget-minded plan. Compare actual fares and routes before choosing. Increase the transfer buffer for distant places.',
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _generate,
+                      icon: const Icon(Icons.auto_stories_outlined),
+                      label: const Text('Create my day plan'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _saving ? null : _saveDraft,
+                        icon: const Icon(Icons.save_outlined),
+                        label: Text(
+                          _saving
+                              ? 'Saving...'
+                              : widget.onSaveDay != null
+                              ? 'Save this day'
+                              : 'Save trip draft',
+                        ),
+                      ),
+                      if (widget.onSaveDay == null &&
+                          widget.controller.draftFor(place.id) != null)
+                        TextButton.icon(
+                          onPressed: _saving ? null : _deleteDraft,
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Delete saved draft'),
+                        ),
+                    ],
+                  ),
+                  const Text(
+                    'One draft per destination. Saving replaces that destination\'s previous draft. Device/browser data can be cleared in settings.',
+                  ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  if (_plan != null) ...[
+                    const SizedBox(height: 28),
+                    Text(
+                      'Your day, at a glance',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 16),
+                    for (final stop in _plan!)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  stop.timeRange,
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.secondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  stop.title,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(stop.note),
+                                if (stop.destination != null)
+                                  TravelLinkButton(
+                                    label: 'Check this route',
+                                    icon: Icons.directions_outlined,
+                                    url: directions(
+                                      origin: '${stop.origin}, $city',
+                                      destination: '${stop.destination}, $city',
+                                      mode: _mode,
+                                    ),
+                                  ),
+                                if (stop.title == 'Meal & a break')
+                                  TravelLinkButton(
+                                    label: 'Find nearby food',
+                                    icon: Icons.restaurant_outlined,
+                                    url: mapSearch(
+                                      _restaurant.text.trim().isEmpty
+                                          ? 'restaurants near ${_additionalPlaces.isEmpty ? _attraction : _additionalPlaces.last}, $city'
+                                          : '${_restaurant.text.trim()}, $city',
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Copy my day plan'),
+                      onPressed: () async {
+                        final text =
+                            'One day in ${place.name}\nPace: $_pace\nMeal: ${_restaurant.text.trim().isEmpty ? 'Choose nearby' : _restaurant.text.trim()}\nTransport: ${transportModes[_mode]}\nDraft timings - verify routes, opening hours and venue hours.\n\n${_plan!.map((stop) => '${stop.timeRange} ${stop.title}\n${stop.note}').join('\n\n')}';
+                        await Clipboard.setData(ClipboardData(text: text));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context)
+                            ..clearSnackBars()
+                            ..showSnackBar(
+                              const SnackBar(content: Text('Day plan copied')),
+                            );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.onSaveDay != null
+                          ? 'Save this day to keep it in your whole trip. Unsaved edits are lost when you leave.'
+                          : 'Use Save trip draft to resume here later, or Copy my day plan to keep a text version. Unsaved edits are lost when you leave.',
+                    ),
+                  ],
+                ],
+              ),
             ),
-          )),
+          ),
+        ),
+      ),
     );
   }
 }

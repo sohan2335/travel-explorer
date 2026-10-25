@@ -80,7 +80,10 @@ void main() {
     await tester.tap(find.text('Plan your visit'));
     await tester.pumpAndSettle();
     expect(find.byType(DayPlannerScreen), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, 'Arrival airport / station'), findsNothing);
+    expect(
+      find.widgetWithText(TextFormField, 'Arrival airport / station'),
+      findsNothing,
+    );
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Start / return location (optional)'),
       'Hotel',

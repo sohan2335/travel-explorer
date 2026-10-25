@@ -27,10 +27,11 @@ class DestinationImage extends StatelessWidget {
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       imageBuilder: (context, provider) => Image(
-          image: provider,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          semanticLabel: label),
+        image: provider,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        semanticLabel: label,
+      ),
       placeholder: (context, _) => _placeholder(context, loading: true),
       errorWidget: (context, _, error) => _placeholder(context),
     );
@@ -39,23 +40,35 @@ class DestinationImage extends StatelessWidget {
   Widget _placeholder(BuildContext context, {bool loading = false}) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF37235F), Color(0xFF19191C)])),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF37235F), Color(0xFF19191C)],
+        ),
+      ),
       child: Center(
-          child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Icon(loading ? Icons.photo_outlined : Icons.landscape_outlined,
-                    color: const Color(0xFFC3AEFF), size: 32),
-                const SizedBox(height: 8),
-                Text(label,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white)),
-              ]))),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                loading ? Icons.photo_outlined : Icons.landscape_outlined,
+                color: const Color(0xFFC3AEFF),
+                size: 32,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

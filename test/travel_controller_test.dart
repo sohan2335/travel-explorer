@@ -3,15 +3,15 @@ import 'package:travel_explorer/models/destination.dart';
 import 'package:travel_explorer/state/travel_controller.dart';
 
 Destination destination(String id, String name, String category) => Destination(
-      id: id,
-      name: name,
-      location: 'India',
-      category: category,
-      imageUrl: 'https://example.com/$id.jpg',
-      description: 'A sample destination.',
-      bestTimeToVisit: 'October',
-      attractions: const [],
-    );
+  id: id,
+  name: name,
+  location: 'India',
+  category: category,
+  imageUrl: 'https://example.com/$id.jpg',
+  description: 'A sample destination.',
+  bestTimeToVisit: 'October',
+  attractions: const [],
+);
 
 void main() {
   late TravelController controller;
@@ -43,8 +43,10 @@ void main() {
   test('search and category must both match; null resets category', () {
     controller.setQuery('g');
     controller.setCategory('Beach');
-    expect(controller.visibleDestinations.map((item) => item.id),
-        ['goa', 'gokarna']);
+    expect(controller.visibleDestinations.map((item) => item.id), [
+      'goa',
+      'gokarna',
+    ]);
     controller.setQuery('gul');
     expect(controller.visibleDestinations, isEmpty);
     controller.setCategory(null);
@@ -82,11 +84,12 @@ void main() {
     expect(notifications, 5);
   });
 
-  test('country is combined with category and name without changing saved IDs',
-      () {
-    final global = TravelController([
-      destination('goa', 'Goa', 'Beach'),
-      const Destination(
+  test(
+    'country is combined with category and name without changing saved IDs',
+    () {
+      final global = TravelController([
+        destination('goa', 'Goa', 'Beach'),
+        const Destination(
           id: 'paris',
           name: 'Paris',
           location: 'Paris, France',
@@ -95,17 +98,19 @@ void main() {
           imageUrl: '',
           description: '',
           bestTimeToVisit: '',
-          attractions: []),
-    ]);
-    addTearDown(global.dispose);
-    global.toggleWishlist('goa');
-    global.setCountry('France');
-    expect(global.visibleDestinations.single.id, 'paris');
-    expect(global.wishlist.single.id, 'goa');
-    global.setQuery('GOA');
-    expect(global.visibleDestinations, isEmpty);
-    global.setCountry(null);
-    expect(global.visibleDestinations.single.id, 'goa');
-    expect(global.countries, ['France', 'India']);
-  });
+          attractions: [],
+        ),
+      ]);
+      addTearDown(global.dispose);
+      global.toggleWishlist('goa');
+      global.setCountry('France');
+      expect(global.visibleDestinations.single.id, 'paris');
+      expect(global.wishlist.single.id, 'goa');
+      global.setQuery('GOA');
+      expect(global.visibleDestinations, isEmpty);
+      global.setCountry(null);
+      expect(global.visibleDestinations.single.id, 'goa');
+      expect(global.countries, ['France', 'India']);
+    },
+  );
 }

@@ -34,83 +34,117 @@ class _TravelToolsState extends State<TravelTools> {
   @override
   Widget build(BuildContext context) {
     final city = '${widget.destination.name}, ${widget.destination.country}';
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Stay nearby & get around',
-          style: Theme.of(context).textTheme.titleLarge),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<String>(
-        initialValue: _place,
-        isExpanded: true,
-        decoration: const InputDecoration(labelText: 'Near which attraction?'),
-        items: widget.destination.attractions
-            .map((place) =>
-                DropdownMenuItem(value: place.name, child: Text(place.name)))
-            .toList(),
-        onChanged: (value) {
-          if (value != null) setState(() => _place = value);
-        },
-      ),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<String>(
-        initialValue: _stayStyle,
-        isExpanded: true,
-        decoration: const InputDecoration(labelText: 'Hotel search preference'),
-        items: const ['Budget', 'Comfort', 'Family-friendly']
-            .map((style) => DropdownMenuItem(value: style, child: Text(style)))
-            .toList(),
-        onChanged: (value) {
-          if (value != null) setState(() => _stayStyle = value);
-        },
-      ),
-      const SizedBox(height: 8),
-      TravelLinkButton(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Stay nearby & get around',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _place,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Near which attraction?',
+          ),
+          items: widget.destination.attractions
+              .map(
+                (place) => DropdownMenuItem(
+                  value: place.name,
+                  child: Text(place.name),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) setState(() => _place = value);
+          },
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _stayStyle,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Hotel search preference',
+          ),
+          items: const ['Budget', 'Comfort', 'Family-friendly']
+              .map(
+                (style) => DropdownMenuItem(value: style, child: Text(style)),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) setState(() => _stayStyle = value);
+          },
+        ),
+        const SizedBox(height: 8),
+        TravelLinkButton(
           label: 'Find nearby hotels',
           icon: Icons.hotel_outlined,
-          url: hotelSearch(_place, city, _stayStyle)),
-      const Text(
-          'Opens hotel search results. Check reviews, location, check-in time, prices and availability with the property.'),
-      const SizedBox(height: 20),
-      TextField(
+          url: hotelSearch(_place, city, _stayStyle),
+        ),
+        const Text(
+          'Opens hotel search results. Check reviews, location, check-in time, prices and availability with the property.',
+        ),
+        const SizedBox(height: 20),
+        TextField(
           controller: _origin,
           onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
-              labelText: 'Starting point (optional)',
-              hintText: 'Your hotel or arrival station')),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<String>(
-        initialValue: _mode,
-        isExpanded: true,
-        decoration:
-            const InputDecoration(labelText: 'How would you like to travel?'),
-        items: transportModes.entries
-            .map((entry) =>
-                DropdownMenuItem(value: entry.key, child: Text(entry.value)))
-            .toList(),
-        onChanged: (value) {
-          if (value != null) setState(() => _mode = value);
-        },
-      ),
-      const SizedBox(height: 8),
-      Wrap(spacing: 8, runSpacing: 4, children: [
-        TravelLinkButton(
-            label: 'Get directions',
-            icon: Icons.directions_outlined,
-            url: directions(
+            labelText: 'Starting point (optional)',
+            hintText: 'Your hotel or arrival station',
+          ),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _mode,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'How would you like to travel?',
+          ),
+          items: transportModes.entries
+              .map(
+                (entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) setState(() => _mode = value);
+          },
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            TravelLinkButton(
+              label: 'Get directions',
+              icon: Icons.directions_outlined,
+              url: directions(
                 destination: '$_place, $city',
                 origin: _origin.text.trim().isEmpty
                     ? ''
                     : '${_origin.text.trim()}, $city',
-                mode: _mode)),
-        if (_mode == 'driving')
-          TravelLinkButton(
-              label: 'Open Uber', url: Uri.parse('https://m.uber.com/')),
-        if (_mode == 'bicycling')
-          TravelLinkButton(
-              label: 'Find bicycle rentals',
-              url: mapSearch('bicycle rental near $_place, $city')),
-      ]),
-      const Text(
-          'Maps provides routes where supported. Compare current fares yourself; this app does not claim a cheapest fare. Cab and bicycle availability varies by city.'),
-    ]);
+                mode: _mode,
+              ),
+            ),
+            if (_mode == 'driving')
+              TravelLinkButton(
+                label: 'Open Uber',
+                url: Uri.parse('https://m.uber.com/'),
+              ),
+            if (_mode == 'bicycling')
+              TravelLinkButton(
+                label: 'Find bicycle rentals',
+                url: mapSearch('bicycle rental near $_place, $city'),
+              ),
+          ],
+        ),
+        const Text(
+          'Maps provides routes where supported. Compare current fares yourself; this app does not claim a cheapest fare. Cab and bicycle availability varies by city.',
+        ),
+      ],
+    );
   }
 }

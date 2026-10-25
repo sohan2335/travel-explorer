@@ -16,20 +16,23 @@ const List<Destination> destinations = [
     bestTimeToVisit: 'November to February',
     attractions: [
       Attraction(
-          name: 'Palolem Beach',
-          imageUrl: 'assets/images/palolem_beach.jpg',
-          description:
-              'A beach stop in South Goa, suited to an unhurried coastal visit. Explore the beachfront and use the map for nearby food and stays.'),
+        name: 'Palolem Beach',
+        imageUrl: 'assets/images/palolem_beach.jpg',
+        description:
+            'A beach stop in South Goa, suited to an unhurried coastal visit. Explore the beachfront and use the map for nearby food and stays.',
+      ),
       Attraction(
-          name: 'Fort Aguada',
-          imageUrl: 'assets/images/fort_aguada.jpg',
-          description:
-              'A historic coastal fort in Goa. It is a separate trip from Palolem Beach, so check the actual journey before combining them in one day.'),
+        name: 'Fort Aguada',
+        imageUrl: 'assets/images/fort_aguada.jpg',
+        description:
+            'A historic coastal fort in Goa. It is a separate trip from Palolem Beach, so check the actual journey before combining them in one day.',
+      ),
       Attraction(
-          name: 'Fontainhas',
-          imageUrl: 'assets/images/fontainhas_goa.jpg',
-          description:
-              'A neighbourhood in Panaji known for colourful streets and heritage buildings. Use the surrounding-area map to explore local lanes and nearby cafés.'),
+        name: 'Fontainhas',
+        imageUrl: 'assets/images/fontainhas_goa.jpg',
+        description:
+            'A neighbourhood in Panaji known for colourful streets and heritage buildings. Use the surrounding-area map to explore local lanes and nearby cafés.',
+      ),
     ],
   ),
   Destination(
@@ -43,9 +46,13 @@ const List<Destination> destinations = [
     bestTimeToVisit: 'November to February',
     attractions: [
       Attraction(
-          name: 'Varkala Beach', imageUrl: 'assets/images/varkala_beach.jpg'),
+        name: 'Varkala Beach',
+        imageUrl: 'assets/images/varkala_beach.jpg',
+      ),
       Attraction(
-          name: 'Varkala Cliff', imageUrl: 'assets/images/varkala_cliff.jpg'),
+        name: 'Varkala Cliff',
+        imageUrl: 'assets/images/varkala_cliff.jpg',
+      ),
     ],
   ),
   Destination(
@@ -59,10 +66,13 @@ const List<Destination> destinations = [
     bestTimeToVisit: 'March to June',
     attractions: [
       Attraction(
-          name: 'Solang Valley', imageUrl: 'assets/images/solang_valley.jpg'),
+        name: 'Solang Valley',
+        imageUrl: 'assets/images/solang_valley.jpg',
+      ),
       Attraction(
-          name: 'Hadimba Devi Temple',
-          imageUrl: 'assets/images/hadimba_devi_temple.jpg'),
+        name: 'Hadimba Devi Temple',
+        imageUrl: 'assets/images/hadimba_devi_temple.jpg',
+      ),
       Attraction(name: 'Old Manali', imageUrl: 'assets/images/old_manali.jpg'),
     ],
   ),
@@ -77,10 +87,13 @@ const List<Destination> destinations = [
     bestTimeToVisit: 'September to March',
     attractions: [
       Attraction(
-          name: 'Mattupetty Dam', imageUrl: 'assets/images/mattupetty_dam.jpg'),
+        name: 'Mattupetty Dam',
+        imageUrl: 'assets/images/mattupetty_dam.jpg',
+      ),
       Attraction(
-          name: 'Top Station',
-          imageUrl: 'assets/images/top_station_munnar.jpg'),
+        name: 'Top Station',
+        imageUrl: 'assets/images/top_station_munnar.jpg',
+      ),
     ],
   ),
   Destination(
@@ -96,8 +109,9 @@ const List<Destination> destinations = [
       Attraction(name: 'Hawa Mahal', imageUrl: 'assets/images/hawa_mahal.jpg'),
       Attraction(name: 'Amber Fort', imageUrl: 'assets/images/amber_fort.jpg'),
       Attraction(
-          name: 'City Palace',
-          imageUrl: 'assets/images/city_palace_jaipur.jpg'),
+        name: 'City Palace',
+        imageUrl: 'assets/images/city_palace_jaipur.jpg',
+      ),
     ],
   ),
   Destination(
@@ -111,13 +125,17 @@ const List<Destination> destinations = [
     bestTimeToVisit: 'March to April and September to November',
     attractions: [
       Attraction(
-          name: 'Shivpuri', imageUrl: 'assets/images/shivpuri_rishikesh.jpg'),
+        name: 'Shivpuri',
+        imageUrl: 'assets/images/shivpuri_rishikesh.jpg',
+      ),
       Attraction(
-          name: 'Neer Garh Waterfall',
-          imageUrl: 'assets/images/neer_garh_waterfall.jpg'),
+        name: 'Neer Garh Waterfall',
+        imageUrl: 'assets/images/neer_garh_waterfall.jpg',
+      ),
       Attraction(
-          name: 'Triveni Ghat',
-          imageUrl: 'assets/images/triveni_ghat_rishikesh.jpg'),
+        name: 'Triveni Ghat',
+        imageUrl: 'assets/images/triveni_ghat_rishikesh.jpg',
+      ),
     ],
   ),
   ...moreDestinations,

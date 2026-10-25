@@ -1,5 +1,6 @@
 import 'local_store_native.dart'
-    if (dart.library.js_interop) 'local_store_web.dart' as platform;
+    if (dart.library.js_interop) 'local_store_web.dart'
+    as platform;
 
 /// Two operations keep storage separate from the app's travel logic.
 abstract class LocalStore {
